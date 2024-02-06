@@ -7,23 +7,20 @@ library(here)
 ## 3. Remove outliers (Replace outlier signal with marginal median)
 ## 4.1. Replace 0 and small values with floor values to avoid -Inf in log2 transformation
 ## 4.2. Log2 transformation
-## 5. Scaling by mean/median of each sample 
+## 5. Scaling by median of each sample 
 ## 6. Removal of common germline CNVs
-## 7. Remove mislabeled samples (NB <-> TP)
+
+
+## 1. Remove samples (columns) with too many 0s and probes (rows) with too may 0s
 
 ## Options
-floor.val.frac <- 0.001 # Threshold value specified as double within [0,1].
-#       CN values will be floored at floor.val.frac x (data mean)
 zero.row.thresh <- 0.4 # Threshold value specifed as double within [0,1].  
 #       Warning is issued for markers for which the corresponding row in data frame contains
 #       more than zero.row.thresh x (number of samples) zeros. Default value for exome: 0.4
 zero.col.thresh <- 0.05 # Threshold value specified as double within [0,1].
 #       Samples whose corresponding column contains more than zero.col.thresh x (number of markers) zeros are removed.
 #       Default value for exome: 0.05.
-scale.method <- 'median' # Function used to scale each column. Can be mean or median.
 
-
-## 1. Remove samples (columns) with too many 0s and probes (rows) with too may 0s
 sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
 
 doc.n <- readRDS(file=here('02_TCGA_data_preparation/data', 'TCGA_WES_hg19_N.rds'))
@@ -88,7 +85,7 @@ probes.with.bad.marker %>%
   left_join(probe.num, by='Chr') %>%
   janitor::adorn_totals() %>%
   mutate(bad.rate=num.bad.probes/num.probes)
-## There were no bad marker in chrY.
+## There were no bad markers in chrY.
 
 dat.sample.probe.flt <- dat.sample.flt[probes.with.bad.marker %>% filter(bad.marker==FALSE) %>% pull(locus), ]
 saveRDS(dat.sample.probe.flt, file=here('02_TCGA_data_preparation/tmp/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'dat.sample.probe.flt.rds'), compress=FALSE)

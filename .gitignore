@@ -1,3 +1,9 @@
 .DS_Store
 ._*
 /*/tmp
+
+# 02_TCGA_data_preparation
+1-s2.0-S0092867423006463-mmc1.xlsx
+mmc2.xlsx
+
+*.rds
