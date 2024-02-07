@@ -10,7 +10,7 @@ seg.list <- lapply(seg.files, read_delim)
 seg.df <- seg.list %>%
   bind_rows() %>%
   as.data.frame()
-# saveRDS(seg.df, here('01_TCGA_seg_arm_level_average/tmp', 'seg.df.rds'), compress=FALSE)
+# saveRDS(seg.df, file=here('01_TCGA_seg_arm_level_average/tmp/01_arm_level_average_calculation', 'seg.df.rds'), compress=FALSE)
 # seg.df <- readRDS(file=here('01_TCGA_seg_arm_level_average/tmp', 'seg.df.rds'))
 
 aliquots <- seg.df$GDC_Aliquot %>% unique()
@@ -72,17 +72,5 @@ seg.tumor.summary <- seg.tumor2 %>%
   summarize(span.total=sum(span), segment.span.total=sum(segment.span)) %>%
   mutate(seg.arm.mean=segment.span.total/span.total) %>%
   ungroup() %>%
-  mutate(auto.sex=case_when(Chromosome=='X' ~ 'X', Chromosome=='Y' ~ 'Y', TRUE ~ 'Autosomes'))
-
-g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
-  geom_hline(yintercept=0, col='gray', linetype='dashed') +
-  geom_hline(yintercept=log2(0.5), col='blue', linetype='dashed') +
-  geom_boxplot() +
-  scale_y_continuous(breaks=seq(-5, 3, by=1)) +
-  facet_wrap(~gender, nrow=1, labeller=as_labeller(c('female'='Female', 'male'='Male'))) +
-  labs(y='log2(Relative CN)', title='Arm level average log2(Relative CN)') +
-  theme_bw(base_size=30) +
-  theme(panel.grid.minor.y=element_blank()) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('output', 'Arm_level_log2RCN.png'), dpi=100, width=16, height=8)
-ggsave(g, file=here('output', 'Arm_level_log2RCN.pdf'), width=16, height=8)
+  mutate(auto.sex=case_when(Chromosome=='X' ~ 'ChrX', Chromosome=='Y' ~ 'ChrY', TRUE ~ 'Autosomes'))
+saveRDS(seg.tumor.summary, file=here('01_TCGA_seg_arm_level_average/tmp/01_arm_level_average_calculation', 'seg.tumor.summary.rds'), compress=FALSE)
