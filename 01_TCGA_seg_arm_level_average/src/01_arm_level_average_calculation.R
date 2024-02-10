@@ -11,7 +11,7 @@ seg.df <- seg.list %>%
   bind_rows() %>%
   as.data.frame()
 # saveRDS(seg.df, file=here('01_TCGA_seg_arm_level_average/tmp/01_arm_level_average_calculation', 'seg.df.rds'), compress=FALSE)
-# seg.df <- readRDS(file=here('01_TCGA_seg_arm_level_average/tmp', 'seg.df.rds'))
+# seg.df <- readRDS(file=here('01_TCGA_seg_arm_level_average/tmp/01_arm_level_average_calculation', 'seg.df.rds'))
 
 aliquots <- seg.df$GDC_Aliquot %>% unique()
 submitter.id <- TCGAutils::UUIDtoBarcode(aliquots, from_type='aliquot_ids')
@@ -74,3 +74,19 @@ seg.tumor.summary <- seg.tumor2 %>%
   ungroup() %>%
   mutate(auto.sex=case_when(Chromosome=='X' ~ 'ChrX', Chromosome=='Y' ~ 'ChrY', TRUE ~ 'Autosomes'))
 saveRDS(seg.tumor.summary, file=here('01_TCGA_seg_arm_level_average/tmp/01_arm_level_average_calculation', 'seg.tumor.summary.rds'), compress=FALSE)
+
+g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
+  geom_hline(yintercept=0, col='gray', linetype='dashed') +
+  geom_hline(yintercept=log2(0.5), col='blue', linetype='dashed') +
+  geom_boxplot() +
+  scale_y_continuous(breaks=seq(-5, 3, by=1)) +
+  lemon::facet_rep_wrap(~gender, nrow=1, labeller=as_labeller(c('female'='Female', 'male'='Male')), repeat.tick.labels=TRUE) +
+  labs(y=expression(paste({log[2]}, '[Relative copy number]', sep='')), title=expression(paste('Arm level average ', {log[2]}, '[Relative CN]'))) +
+  # coord_capped_cart(bottom='both', left='both') +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_rect(linewidth=0)) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.title.x=element_blank())
+ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.png'), dpi=100, width=10, height=5)
+ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.pdf'), width=10, height=5)

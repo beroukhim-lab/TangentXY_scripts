@@ -3,7 +3,7 @@ library(here)
 
 ## Preprocessing for Tangent
 ## 1. Remove samples (columns) with too many 0s and probes (rows) with too may 0s
-## 2. Check if there are samples that have been mislabeled (female <-> male)
+## 2. Check if there are samples that have been mislabeled by biological gender (female <-> male)
 ## 3. Remove outliers (Replace outlier signal with marginal median)
 ## 4.1. Replace 0 and small values with floor values to avoid -Inf in log2 transformation
 ## 4.2. Log2 transformation
@@ -60,7 +60,7 @@ probes.with.bad.marker <- pos.used %>%
   mutate(zero.ratio=zero.num / length(dat.sample.flt)) %>%
   mutate(bad.marker=case_when(zero.ratio >= zero.row.thresh & Chr!='Y' ~ TRUE, TRUE ~ FALSE)) # Basically ChrY should be 0 in female samples, so bad markers on ChrY cannot be determined in this way.
 
-dat.sample.flt.male.chrY <- dat.sample.flt[grepl('Y', rownames(dat.sample.flt)), qc.df %>% filter(SampleID %in% colnames(dat.sample.flt)) %>% filter(gender=='male') %>% pull(SampleID)]
+dat.sample.flt.male.chrY <- dat.sample.flt[grepl('Y', rownames(dat.sample.flt)), qc.df %>% filter(SampleID %in% colnames(dat.sample.flt)) %>% filter(Gender=='Male') %>% pull(SampleID)]
 
 probes.with.bad.marker.chrY <- pos.used %>%
   filter(Chr=='Y') %>%

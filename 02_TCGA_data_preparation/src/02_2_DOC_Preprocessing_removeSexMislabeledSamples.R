@@ -3,7 +3,7 @@ library(here)
 
 ## Preprocessing for Tangent
 ## 1. Remove samples (columns) with too many 0s and probes (rows) with too may 0s
-## 2. Check if there are samples that have been mislabeled (female <-> male)
+## 2. Check if there are samples that have been mislabeled by biological gender (female <-> male)
 ## 3. Remove outliers (Replace outlier signal with merginal median)
 ## 4.1. Replace 0 and small values with floor values to avoid -Inf in log2 transformation
 ## 4.2. Log2 transformation
@@ -67,12 +67,12 @@ qi.fX.suspicious.pts <- qi.fX %>%
 
 ## Pick up likely mislabeled samples based on my own criteria
 enomoto.female.suspicious.pts <- xy.summary %>%
-  filter(gender=='female' & Y > 50) %>%
+  filter(Gender=='Female' & Y > 50) %>%
   pull(TCGA.ID) %>%
   unique()
 
 enomoto.male.suspicious.pts <- xy.summary %>%
-  filter(gender=='male' & Y < 5) %>%
+  filter(Gender=='Male' & Y < 5) %>%
   pull(TCGA.ID) %>%
   unique()
 
@@ -99,8 +99,8 @@ VennDiagram::venn.diagram(list(Enomoto=own.female.suspicious.pts, Qi=qi.fX.suspi
 
 g <- ggplot(xy.summary, aes(x=X, y=Y)) +
   geom_abline(slope=1, intercept=0, linetype='dashed') +
-  geom_abline(data=. %>% filter(gender=='male'), aes(slope=2, intercept=0), linetype='dashed') +
-  geom_abline(data=. %>% filter(gender=='male'), aes(slope=0.5, intercept=0), linetype='dashed') +
+  geom_abline(data=. %>% filter(Gender=='Male'), aes(slope=2, intercept=0), linetype='dashed') +
+  geom_abline(data=. %>% filter(Gender=='Male'), aes(slope=0.5, intercept=0), linetype='dashed') +
   geom_point(aes(col=project), size=2) +
   lims(x=c(0, NA), y=c(0, NA)) +
   ggrepel::geom_text_repel(data=. %>% filter(TCGA.ID %in% enomoto.female.suspicious.pts), aes(label=ID), col='black', box.padding=1, position=position_jitter(), xlim=c(150, NA), max.overlaps=Inf, show.legend=FALSE) +
@@ -110,7 +110,7 @@ g <- ggplot(xy.summary, aes(x=X, y=Y)) +
   ggrepel::geom_text_repel(data=. %>% filter(TCGA.ID %in% qi.mY.suspicious.pts), aes(label=ID), col='pink', box.padding=1, position=position_jitter(), xlim=c(150, NA), max.overlaps=Inf, show.legend=FALSE) +
   ggrepel::geom_text_repel(data=. %>% filter(TCGA.ID %in% qi.fX.suspicious.pts), aes(label=ID), col='pink', box.padding=1, position=position_jitter(), xlim=c(150, NA), max.overlaps=Inf, show.legend=FALSE) +
   labs(x='X (median of depth)', y='Y (median of depth)') +
-  facet_grid(type~gender) +
+  facet_grid(type~Gender) +
   theme_bw(base_size=20)
 ggsave(g, file=here('02_TCGA_data_preparation/output/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'XY_signal.png'), dpi=100, width=16, height=12)
 
