@@ -116,10 +116,7 @@ saveRDS(sn.df, file=here('04_TCGA_Tangent_vs_TangentXY/output/09_SMTangent_vs_Ta
 ## Visualization of signal and noise with violin plot
 signal.noise <- sn.df %>%
   mutate(fm=factor(.$fm, levels=.$fm %>% unique())) %>%
-  # mutate(sn.autox=signal.autox/noise.autox) %>%
-  # mutate(sn.auto=signal.auto/noise.auto) %>%
   mutate(sn.x=signal.x/noise.x) %>%
-  mutate(gender=str_to_title(gender)) %>%
   mutate(fm2=case_when(fm=='F5M495' ~ '5F + 495M',
                         fm=='F25M475' ~ '25F + 475M',
                         fm=='F50M450' ~ '50F + 450M',
@@ -133,32 +130,24 @@ signal.noise <- sn.df %>%
 ## Noise (ChrX)
 stat.test.noise.auto.FMmerged <- signal.noise %>%
   filter(method!='-') %>%
-  # filter(!SampleID %in% c('LUSC.77.8156.TP', 'LUSC.85.8072.TP', 'CESC.DS.A1OC.TP', 'CESC.DS.A1OD.TP')) %>%
-  mutate(n.num=as.character(n.num)) %>%
-  filter(n.num %in% c('10', '50', '100', '200', '500')) %>%
-  mutate(n.num=factor(.$n.num, levels=c('Pre-normalization', '10', '50', '100', '200', '500'))) %>%
-  group_by(n.num) %>%
-  rstatix::wilcox_test(noise.auto ~ method, paired=TRUE)
+  group_by(fm2) %>%
+  rstatix::wilcox_test(noise.x ~ method) %>%
+  rstatix::adjust_pvalue(method = "bonferroni") %>%
+  rstatix::add_significance() %>%
+  filter(!(group1=='Sex-matched Tangent_Female' & group2=='Sex-matched Tangent_Male')) %>%
+  mutate(Gender=case_when(group1=='Sex-matched Tangent_Female' ~ 'Female', group1=='Sex-matched Tangent_Male' ~ 'Male'))
 
 g <- ggplot(signal.noise, aes(x=fm2, y=noise.x)) +
   geom_boxplot(aes(group=interaction(fm2, method), fill=method)) +
-  # ggpubr::stat_pvalue_manual(stat.test.noise.auto.FMmerged %>% rstatix::add_xy_position(x='n.num'), label='{p}', col='black', size=5) +
+  # ggpubr::stat_pvalue_manual(stat.test.noise.auto.FMmerged %>% rstatix::add_xy_position(x='fm2'), label='p.adj.signif', col='black', size=5) +
   scale_fill_manual(values=list('Sex-matched Tangent_Female'='red', 'Sex-matched Tangent_Male'='royalblue', 'TangentXY'='green')) +
   ylim(0, NA) +
-  facet_wrap(~ gender, nrow=1) +
-  labs(title='Noise (ChrX)', x='Number of normals in reference plane', y='Noise', fill='Method') +
-  theme_bw(base_size=30) +
+  lemon::facet_rep_wrap(~Gender, nrow=1, repeat.tick.labels=TRUE) +
+  labs(title='Noise (ChrX)', x='# normal samples in reference plane', y='Noise', fill='Method') +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
-ggsave(g, file=here('output/SignalNoise/XY_FMcombination', 'Noise_chrX_FMseparated.png'), dpi=100, width=20, height=10)
-ggsave(g, file=here('output/SignalNoise/XY_FMcombination', 'Noise_chrX_FMseparated.pdf'), width=20, height=10)
-
-g <- ggplot(signal.noise, aes(x=fm2, y=noise.x)) +
-  geom_boxplot(aes(group=interaction(fm2, method), fill=method)) +
-  # ggpubr::stat_pvalue_manual(stat.test.noise.auto.FMmerged %>% rstatix::add_xy_position(x='n.num'), label='{p}', col='black', size=5) +
-  scale_fill_manual(values=list('Sex-matched Tangent_Female'='red', 'Sex-matched Tangent_Male'='royalblue', 'TangentXY'='green')) +
-  ylim(0, NA) +
-  labs(title='Noise (ChrX)', x='Number of normals in reference plane', y='Noise', fill='Method') +
-  theme_bw(base_size=30) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
-ggsave(g, file=here('output/SignalNoise/XY_FMcombination', 'Noise_chrX_FMmerged.png'), dpi=100, width=14, height=10)
-ggsave(g, file=here('output/SignalNoise/XY_FMcombination', 'Noise_chrX_FMmerged.pdf'), width=14, height=10)
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/09_SMTangent_vs_TangentXY_FMratio', 'FigS2b.png'), dpi=100, width=14, height=6)
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/09_SMTangent_vs_TangentXY_FMratio', 'FigS2b.pdf'), width=14, height=6)
