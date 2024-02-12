@@ -12,7 +12,7 @@ library(here)
 
 
 ## 6. Removal of common germline CNVs
-dat.scaled <- readRDS(file=here('02_TCGA_data_preparation/tmp/02_5_DOC_Preprocessing_scaleByMedian', 'dat.scaled.rds'))
+dat.scaled <- readRDS(file=here('02_TCGA_data_preparation/output/02_5_DOC_Preprocessing_scaleByMedian', 'dat.scaled.rds'))
 
 probes <- dat.scaled %>%
   rownames() %>%
@@ -47,7 +47,7 @@ probes.to.be.used <- probes.with.flag %>%
 
 dat.gcnv.flt <- dat.scaled[probes.to.be.used$locus, ]
 
-saveRDS(dat.gcnv.flt, file=here('02_TCGA_data_preparation/tmp/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'dat.gcnv.flt.RData'), compress=FALSE)
+saveRDS(dat.gcnv.flt, file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'dat.gcnv.flt.RData'), compress=FALSE)
 
 ## Separate normal samples and tumor samples for downstream analyses
 dat.for.analysis.n <- dat.gcnv.flt %>%

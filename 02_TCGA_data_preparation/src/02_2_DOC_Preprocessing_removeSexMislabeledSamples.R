@@ -14,9 +14,9 @@ library(here)
 ## 2. Check if there are samples that have been mislabeled (female <-> male)
 
 sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
-qc.df <- readRDS(here('02_TCGA_data_preparation/tmp/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'qc.df.rds'))
+qc.df <- readRDS(here('02_TCGA_data_preparation/output/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'qc.df.rds'))
 
-dat.sample.probe.flt <- readRDS(file=here('02_TCGA_data_preparation/tmp/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'dat.sample.probe.flt.rds'))
+dat.sample.probe.flt <- readRDS(file=here('02_TCGA_data_preparation/output/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'dat.sample.probe.flt.rds'))
 
 xy.summary <- doc.xy.g <- dat.sample.probe.flt[grepl('X|Y', rownames(dat.sample.probe.flt)), ] %>%
   select(ends_with('NB') | ends_with('NBC') | ends_with('NT')) %>%
@@ -120,7 +120,7 @@ qc.df2 <- qc.df %>%
   mutate(suspicious.gender.sadagopan=ifelse(TCGA.ID %in% sadagopan.male.suspicious.pts, TRUE, FALSE)) %>%
   mutate(suspicious.klinefelter=ifelse(TCGA.ID %in% Klinefelter.ID, TRUE, FALSE)) %>%
   mutate(used.for.analysis=case_when(too.many.zeros==FALSE & suspicious.gender.enomoto==FALSE & suspicious.gender.qi==FALSE & suspicious.gender.sadagopan==FALSE & suspicious.klinefelter==FALSE ~ TRUE, TRUE ~ FALSE))
-saveRDS(qc.df2, file=here('02_TCGA_data_preparation/tmp/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'qc.df2.rds'), compress=FALSE)
+saveRDS(qc.df2, file=here('02_TCGA_data_preparation/output/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'qc.df2.rds'), compress=FALSE)
 
 
 ## Select samples to be analyzed
@@ -129,4 +129,4 @@ samples.to.be.analyzed <- qc.df2 %>%
   pull(SampleID)
 
 dat.flt <- dat.sample.probe.flt %>% select(samples.to.be.analyzed)
-saveRDS(dat.flt, file=here('02_TCGA_data_preparation/tmp/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'dat.flt.rds'), compress=FALSE)
+saveRDS(dat.flt, file=here('02_TCGA_data_preparation/output/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'dat.flt.rds'), compress=FALSE)

@@ -50,7 +50,7 @@ qc.df <- data.frame(num.zero=unlist(number.of.zeros)) %>%
   mutate(zero.ratio=num.zero/nrow(dat[!grepl('X|Y', rownames(dat)), ])) %>%
   mutate(too.many.zeros=ifelse(zero.ratio >= zero.col.thresh, TRUE, FALSE)) %>%
   left_join(sif, by='SampleID')
-saveRDS(qc.df, file=here('02_TCGA_data_preparation/tmp/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'qc.df.rds'), compress=FALSE)
+saveRDS(qc.df, file=here('02_TCGA_data_preparation/output/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'qc.df.rds'), compress=FALSE)
 
 dat.sample.flt <- dat[, qc.df %>% filter(too.many.zeros==FALSE) %>% pull(SampleID)]
 
@@ -88,4 +88,4 @@ probes.with.bad.marker %>%
 ## There were no bad markers in chrY.
 
 dat.sample.probe.flt <- dat.sample.flt[probes.with.bad.marker %>% filter(bad.marker==FALSE) %>% pull(locus), ]
-saveRDS(dat.sample.probe.flt, file=here('02_TCGA_data_preparation/tmp/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'dat.sample.probe.flt.rds'), compress=FALSE)
+saveRDS(dat.sample.probe.flt, file=here('02_TCGA_data_preparation/output/02_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'dat.sample.probe.flt.rds'), compress=FALSE)

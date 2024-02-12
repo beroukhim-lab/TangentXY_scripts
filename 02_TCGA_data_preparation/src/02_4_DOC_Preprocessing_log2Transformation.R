@@ -17,7 +17,7 @@ library(here)
 floor.val.frac <- 0.001 # Threshold value specified as double within [0,1].
 #       CN values will be floored at floor.val.frac x (data mean)
 
-dat.outlier.removed <- readRDS(file=here('02_TCGA_data_preparation/tmp/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.removed.rds'))
+dat.outlier.removed <- readRDS(file=here('02_TCGA_data_preparation/output/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.removed.rds'))
 
 col.means <- sapply(dat.outlier.removed[!grepl('X|Y', rownames(dat.outlier.removed)),], mean) %>%
   as.data.frame() %>%
@@ -37,4 +37,4 @@ for (i in 1:length(dat.outlier.removed)) {
 ## 4.2. Log2 transformation
 
 dat.log2 <- log2(dat.0rep)
-saveRDS(dat.log2, file=here('02_TCGA_data_preparation/tmp/02_4_DOC_Preprocessing_log2Transformation', 'dat.log2.rds'), compress=FALSE)
+saveRDS(dat.log2, file=here('02_TCGA_data_preparation/output/02_4_DOC_Preprocessing_log2Transformation', 'dat.log2.rds'), compress=FALSE)

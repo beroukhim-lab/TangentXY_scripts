@@ -12,9 +12,9 @@ library(here)
 
 
 ## 5. Scaling by median of each sample
-dat.log2 <- readRDS(file=here('02_TCGA_data_preparation/tmp/02_4_DOC_Preprocessing_log2Transformation', 'dat.log2.rds'))
+dat.log2 <- readRDS(file=here('02_TCGA_data_preparation/output/02_4_DOC_Preprocessing_log2Transformation', 'dat.log2.rds'))
 
 medians <- sapply(dat.log2[!grepl('X|Y', rownames(dat.log2)), ], median)
 dat.scaled <- t(t(dat.log2) - medians)
 
-saveRDS(dat.scaled, file=here('02_TCGA_data_preparation/tmp/02_5_DOC_Preprocessing_scaleByMedian', 'dat.scaled.rds'), compress=FALSE)
+saveRDS(dat.scaled, file=here('02_TCGA_data_preparation/output/02_5_DOC_Preprocessing_scaleByMedian', 'dat.scaled.rds'), compress=FALSE)

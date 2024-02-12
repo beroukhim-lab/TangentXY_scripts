@@ -15,7 +15,7 @@ library(here)
 
 sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
 pos <- readRDS(here('02_TCGA_data_preparation/output/01_WES_probe_annotation', 'probes.hg19.annotated.rds'))
-dat.flt <- readRDS(file=here('02_TCGA_data_preparation/tmp/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'dat.flt.rds'))
+dat.flt <- readRDS(file=here('02_TCGA_data_preparation/output/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'dat.flt.rds'))
 
 
 ## A point is considered an outlier if ALL of the following apply:
@@ -79,10 +79,10 @@ dat.outlier.detected.list <- lapply(dat.outlier.removed.list, '[[', 'outlier.det
 dat.outlier.detected <- dat.outlier.detected.list %>%
   bind_cols() %>%
   setNames(colnames(dat.flt))
-saveRDS(dat.outlier.detected, file=here('02_TCGA_data_preparation/tmp/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.detected.rds'), compress=FALSE)
+saveRDS(dat.outlier.detected, file=here('02_TCGA_data_preparation/output/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.detected.rds'), compress=FALSE)
 
 dat.new.signal.list <- lapply(dat.outlier.removed.list, '[[', 'new.signal')
 dat.outlier.removed <- dat.new.signal.list %>%
   bind_cols() %>%
   setNames(colnames(dat.flt))
-saveRDS(dat.outlier.removed, file=here('02_TCGA_data_preparation/tmp/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.removed.rds'), compress=FALSE)
+saveRDS(dat.outlier.removed, file=here('02_TCGA_data_preparation/output/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.removed.rds'), compress=FALSE)
