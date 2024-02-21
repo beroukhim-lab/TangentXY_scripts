@@ -32,9 +32,9 @@ for (i in 1:length(dimensions)) {
   Tn.auto.medians <- Tn.autox[!grepl('X', rownames(Tn.autox)),] %>%
     apply(., 2, median)
 
-  Tn.autox.scaled <- t(t(Tn.autox)- Tn.auto.medians)
+  Tn.autox.normalized <- t(t(Tn.autox)- Tn.auto.medians)
 
-  saveRDS(Tn.autox.scaled, file=here('03_TCGA_TangentXY/output/03_TangentXY', paste0('Tn_autox_svd_', dim.i, 'dimensions.rds')), compress=FALSE)
+  saveRDS(Tn.autox.normalized, file=here('03_TCGA_TangentXY/output/03_TangentXY', paste0('Tn_autox_svd_', dim.i, 'dimensions.rds')), compress=FALSE)
 }
 
 

@@ -1,10 +1,8 @@
 .DS_Store
 ._*
-/*/tmp
+output/
+data/
 
-# 02_TCGA_data_preparation
-1-s2.0-S0092867423006463-mmc1.xlsx
-mmc2.xlsx
+sample.tsv
+OmicsExpressionAllGenesTPMLogp1Profile.csv
 
-*.rds
-*.RData

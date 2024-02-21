@@ -81,11 +81,10 @@ g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
   scale_y_continuous(breaks=seq(-5, 3, by=1)) +
   lemon::facet_rep_wrap(~gender, nrow=1, labeller=as_labeller(c('female'='Female', 'male'='Male')), repeat.tick.labels=TRUE) +
   labs(y=expression(paste({log[2]}, '[Relative CN]', sep='')), title=expression(paste('Arm level average ', {log[2]}, '[Relative CN]'))) +
-  # coord_capped_cart(bottom='both', left='both') +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.png'), dpi=100, width=10, height=5)
-ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.pdf'), width=10, height=5)
+ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.pdf'), width=10, height=5, useDingbats=TRUE)

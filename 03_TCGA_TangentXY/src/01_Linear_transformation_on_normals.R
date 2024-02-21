@@ -2,7 +2,6 @@ library(tidyverse)
 library(here)
 
 sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
-pos <- readRDS(file=here('02_TCGA_data_preparation/output/01_WES_probe_annotation', 'probes.hg19.annotated.rds'))
 
 gender.known.samples <- sif %>%
   filter(Gender!='NA') %>%
@@ -31,9 +30,10 @@ saveRDS(probes, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_
 signal.x <- doc.n[grepl('X', rownames(doc.n)), ] %>%
   pivot_longer(names_to='SampleID', values_to='signal', cols=everything()) %>%
   left_join(sif, by='SampleID')
+saveRDS(signal.x, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'signal.x.rds'), compress=FALSE)
 
 g <- ggplot(signal.x, aes(x=signal, group=SampleID)) +
-  geom_density(aes(fill=Gender), alpha=0.25) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip() +
@@ -42,16 +42,17 @@ g <- ggplot(signal.x, aes(x=signal, group=SampleID)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1a.png'), dpi=100, width=8, height=8)
+ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1a.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1a.pdf'), width=8, height=8)
 
 
 signal.y <- doc.n[grepl('Y', rownames(doc.n)), ] %>%
   pivot_longer(names_to='SampleID', values_to='signal', cols=everything()) %>%
   left_join(sif, by='SampleID')
+saveRDS(signal.y, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'signal.y.rds'), compress=FALSE)
 
 g <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
-  geom_density(aes(fill=Gender), alpha=0.25) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip() +
@@ -60,7 +61,7 @@ g <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c.png'), dpi=100, width=8, height=8)
+ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c.pdf'), width=8, height=8)
 
 
@@ -116,7 +117,7 @@ signal.x.lt <- doc.n.transformed[grepl('X', rownames(doc.n.transformed)),] %>%
   left_join(sif, by='SampleID')
 
 g <- ggplot(signal.x.lt, aes(x=signal, group=SampleID)) +
-  geom_density(aes(fill=Gender), alpha=0.25) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip() +
@@ -125,5 +126,5 @@ g <- ggplot(signal.x.lt, aes(x=signal, group=SampleID)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.png'), dpi=100, width=8, height=8)
+ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.pdf'), width=8, height=8)

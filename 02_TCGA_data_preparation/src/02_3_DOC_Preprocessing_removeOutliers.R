@@ -13,7 +13,6 @@ library(here)
 
 ## 3. Remove outliers
 
-sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
 pos <- readRDS(here('02_TCGA_data_preparation/output/01_WES_probe_annotation', 'probes.hg19.annotated.rds'))
 dat.flt <- readRDS(file=here('02_TCGA_data_preparation/output/02_2_DOC_Preprocessing_removeSexMislabeledSamples', 'dat.flt.rds'))
 

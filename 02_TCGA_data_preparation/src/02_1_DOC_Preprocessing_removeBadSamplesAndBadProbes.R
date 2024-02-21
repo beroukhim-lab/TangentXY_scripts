@@ -38,12 +38,12 @@ dat <- doc[pos.used$locus, ]
 
 ## (There are no NAs in DOC data except Masked==TRUE loci in chrY PAR that have been removed. Treat 0 as NA instead.)
 ## 1-1. Samples (columns)
-count.na <- function(list) {
+count.zeros <- function(list) {
   n.zero <- length(list[list==0])
   return(n.zero)
 }
 
-number.of.zeros <- lapply(dat[!grepl('X|Y', rownames(dat)), ], count.na)
+number.of.zeros <- lapply(dat[!grepl('X|Y', rownames(dat)), ], count.zeros)
 qc.df <- data.frame(num.zero=unlist(number.of.zeros)) %>%
   rownames_to_column('SampleID') %>%
   select(SampleID, num.zero) %>%
