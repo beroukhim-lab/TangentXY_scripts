@@ -90,3 +90,4 @@ ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_c
 ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.pdf'), width=10, height=5, useDingbats=TRUE)
 
 test
+test2
