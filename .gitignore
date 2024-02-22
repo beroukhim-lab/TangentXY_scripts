@@ -5,7 +5,7 @@
 /*/data/*
 
 !README.md
-!*.png
+!*.pdf
 
 !gdc_manifest_SNP6_seg_grch38.txt
 !gdc_manifest_TCGA_RNAseq.txt

@@ -1,1 +1,0 @@
-/xchip/beroukhimlab/kei/git/tangent/lib/CNV.hg19.bypos.111213.txt
