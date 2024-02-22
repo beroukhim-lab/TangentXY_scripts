@@ -26,7 +26,7 @@ samples.to.be.analyzed <- sif %>%
   filter(lineage!='fibroblast') %>%
   pull(DepMap_ID)
 
-cbio.file <- here('10_chrX_SCNA_vs_gene_expression/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
+cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
 cbio <- read.delim(cbio.file) %>%
   setNames(gsub('\\.', '', colnames(.))) %>%
   mutate(DepMapID=gsub('-', '.', DepMapID)) %>%
@@ -103,7 +103,7 @@ saveRDS(gene.type.lo, file=here('10_chrX_SCNA_vs_gene_expression/output/02_CCLE_
 ## CN
 segment.arm <- readRDS(fil=here('07_SCNAs_in_chrX_and_chrY/output/02_CCLE_SCNA_classification', 'segment.arm.rds'))
 
-OmicsDefaultModelProfiles.file <- here('10_chrX_SCNA_vs_gene_expression/data' , 'OmicsDefaultModelProfiles.csv')
+OmicsDefaultModelProfiles.file <- here('10_chrX_SCNA_vs_gene_expression/data' , 'OmicsOmicsDefaultModelProfiles.csv')
 OmicsExpressionAllGenesTPMLogp1Profile.file <- here('10_chrX_SCNA_vs_gene_expression/data', 'OmicsExpressionAllGenesTPMLogp1Profile.csv')
 
 # OmicsProfiles <- read_csv(OmicsProfiles.file)

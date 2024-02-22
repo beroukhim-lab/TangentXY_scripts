@@ -1,0 +1,2 @@
+- "clinical.tsv" was downloaded from GDC Data Portal (https://portal.gdc.cancer.gov/v1/repository)
+- seg files were downloaded from GDC Data Portal using GDC Data Transfer Tool with manifest file "gdc_manifest_SNP6_seg_grch38.txt".

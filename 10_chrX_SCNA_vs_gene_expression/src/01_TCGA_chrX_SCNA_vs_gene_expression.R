@@ -34,7 +34,7 @@ tpm.df <- tpm.df.ori %>%
 
 ## Analysis on chrX
 ## Gene list (Normal gene/Escape gene)
-gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukianinen2017Nature', 'Suppl.Table.1.xlsx')
+gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukiainen2017Nature', 'Suppl.Table.1.xlsx')
 gene.type <- readxl::read_xlsx(gene.type.file, skip=1) %>%
   as.data.frame() %>%
   setNames(gsub(' ', '_', colnames(.))) %>%

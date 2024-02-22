@@ -41,7 +41,7 @@ annotations <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Cell Line Annotations
 
 datasets <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Datasets')
 
-cbio.file <- here('10_chrX_SCNA_vs_gene_expression/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
+cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
 cbio <- read.delim(cbio.file) %>%
   setNames(gsub('\\.', '', colnames(.))) %>%
   mutate(DepMapID=gsub('-', '.', DepMapID)) %>%

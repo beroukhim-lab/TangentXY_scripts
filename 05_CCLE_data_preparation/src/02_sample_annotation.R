@@ -3,7 +3,8 @@ library(here)
 
 library(rvest)
 
-sif <- read_csv(here('05_CCLE_data_preparation/data', 'internal-22q2_v15-sample-info.csv')) # Downloaded from Skyros (https://cds.team/depmap/)
+# sif <- read_csv(here('05_CCLE_data_preparation/data', 'internal-22q2_v15-sample-info.csv')) # Downloaded from Skyros (https://cds.team/depmap/)
+sif <- read_csv(here('05_CCLE_data_preparation/data', 'Model.csv')) # Downloaded from DepMap (https://depmap.org/portal/download/all/)
 
 ## Firstly, retrieve ATCC IDs and DSMZ IDs from cellosaurus
 for (i in 1:nrow(sif)) {
