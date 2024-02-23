@@ -2,14 +2,14 @@ library(tidyverse)
 library(here)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 ## Ploidy
 polyploidy.threshold <- 2.5
 
 Mahmoud.supp.file <- here('05_CCLE_data_preparation/data/CCLE_Mahmoud2019Nature', '41586_2019_1186_MOESM4_ESM.xlsx')
 annotations <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Cell Line Annotations') %>%
-  mutate(DepMapID=sub('-', '.', depMapID))
+  mutate(ModelID=sub('-', '.', depMapID))
 
 datasets <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Datasets')
 
@@ -18,28 +18,27 @@ sample.with.wes <- datasets %>%
 
 sample.with.wes.depmapid <- annotations %>%
   filter(CCLE_ID %in% sample.with.wes$CCLE_ID) %>%
-  pull(depMapID) %>%
-  sub('-', '.', .)
+  pull(ModelID)
 
 samples.to.be.analyzed <- sif %>%
-  filter(DepMap_ID %in% sample.with.wes.depmapid) %>%
-  filter(lineage!='fibroblast') %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% sample.with.wes.depmapid) %>%
+  filter(OncotreeLineage!='Fibroblast') %>%
+  pull(ModelID)
 
 cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
 cbio <- read.delim(cbio.file) %>%
   setNames(gsub('\\.', '', colnames(.))) %>%
-  mutate(DepMapID=gsub('-', '.', DepMapID)) %>%
-  filter(!is.na(DepMapID)) %>%
+  mutate(ModelID=gsub('-', '.', DepMapID)) %>%
+  filter(!is.na(ModelID)) %>%
   filter(AnnotationSource=='CCLE') %>%
-  left_join(annotations %>% select(DepMapID, tcga_code), by='DepMapID') %>%
+  left_join(annotations %>% select(ModelID, tcga_code), by='ModelID') %>%
   mutate(ploidy.class=case_when(is.na(Ploidy) & is.na(GenomeDoublings) ~ NA,
                                 Ploidy < polyploidy.threshold & GenomeDoublings==0 ~ 'Diploid',
                                 TRUE ~ 'Polyploid'))
 
 ## Analysis on chrX
 ## Gene list (Normal gene/Escape gene)
-gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukianinen2017Nature', 'Suppl.Table.1.xlsx')
+gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukiainen2017Nature', 'Suppl.Table.1.xlsx')
 gene.type <- readxl::read_xlsx(gene.type.file, skip=1) %>%
   as.data.frame() %>%
   setNames(gsub(' ', '_', colnames(.))) %>%
@@ -103,7 +102,7 @@ saveRDS(gene.type.lo, file=here('10_chrX_SCNA_vs_gene_expression/output/02_CCLE_
 ## CN
 segment.arm <- readRDS(fil=here('07_SCNAs_in_chrX_and_chrY/output/02_CCLE_SCNA_classification', 'segment.arm.rds'))
 
-OmicsDefaultModelProfiles.file <- here('10_chrX_SCNA_vs_gene_expression/data' , 'OmicsOmicsDefaultModelProfiles.csv')
+OmicsDefaultModelProfiles.file <- here('10_chrX_SCNA_vs_gene_expression/data' , 'OmicsDefaultModelProfiles.csv')
 OmicsExpressionAllGenesTPMLogp1Profile.file <- here('10_chrX_SCNA_vs_gene_expression/data', 'OmicsExpressionAllGenesTPMLogp1Profile.csv')
 
 # OmicsProfiles <- read_csv(OmicsProfiles.file)
@@ -114,10 +113,10 @@ log2tpm.df <- OmicsExpressionAllGenesTPMLogp1Profile %>%
   rename(ProfileID='...1') %>%
   left_join(OmicsDefaultModelProfiles %>% select(ProfileID, ModelID), by='ProfileID') %>%
   filter(!is.na(ModelID)) %>%
-  mutate(DepMapID=sub('-', '.', ModelID)) %>%
-  select(-c('ProfileID', 'ModelID')) %>%
-  pivot_longer(names_to='gene', values_to='log2tpm', cols=-'DepMapID') %>%
-  pivot_wider(names_from='DepMapID', values_from='log2tpm') %>%
+  mutate(ModelID=sub('-', '.', ModelID)) %>%
+  select(-'ProfileID') %>%
+  pivot_longer(names_to='gene', values_to='log2tpm', cols=-'ModelID') %>%
+  pivot_wider(names_from='ModelID', values_from='log2tpm') %>%
   mutate(gene_symbol=gene %>% gsub(' \\(|\\)|ENSG[0-9]{11}', '', .)) %>%
   mutate(ensembl_gene_id=str_extract(gene, 'ENSG[0-9]{11}')) %>%
   select(gene, gene_symbol, ensembl_gene_id, everything())
@@ -126,12 +125,12 @@ tpm.df <- OmicsExpressionAllGenesTPMLogp1Profile %>%
   rename(ProfileID='...1') %>%
   left_join(OmicsDefaultModelProfiles %>% select(ProfileID, ModelID), by='ProfileID') %>%
   filter(!is.na(ModelID)) %>%
-  mutate(DepMapID=sub('-', '.', ModelID)) %>%
-  select(-c('ProfileID', 'ModelID')) %>%
-  pivot_longer(names_to='gene', values_to='log2tpm', cols=-'DepMapID') %>%
+  mutate(ModelID=sub('-', '.', ModelID)) %>%
+  select(-'ProfileID') %>%
+  pivot_longer(names_to='gene', values_to='log2tpm', cols=-'ModelID') %>%
   mutate(tpm=(2^log2tpm)-1) %>%
   select(-'log2tpm') %>%
-  pivot_wider(names_from='DepMapID', values_from='tpm') %>%
+  pivot_wider(names_from='ModelID', values_from='tpm') %>%
   mutate(gene_symbol=gene %>% gsub(' \\(|\\)|ENSG[0-9]{11}', '', .)) %>%
   mutate(ensembl_gene_id=str_extract(gene, 'ENSG[0-9]{11}')) %>%
   select(gene, gene_symbol, ensembl_gene_id, everything())
@@ -151,12 +150,12 @@ gene.type.flt <- gene.type.lo %>%
 
 tpm.df.l <- tpm.df %>%
   filter(ensembl_gene_id %in% gene.type.flt$ensembl_gene_id) %>%
-  pivot_longer(names_to='DepMapID', values_to='tpm', cols=-c('gene', 'gene_symbol', 'ensembl_gene_id')) %>%
-  filter(DepMapID %in% samples.to.be.analyzed)
+  pivot_longer(names_to='ModelID', values_to='tpm', cols=-c('gene', 'gene_symbol', 'ensembl_gene_id')) %>%
+  filter(ModelID %in% samples.to.be.analyzed)
 
 tpm.medians <- tpm.df.l %>%
-  left_join(sif %>% select(DepMap_ID, sex), by=c('DepMapID'='DepMap_ID')) %>%
-  group_by(gene_symbol, ensembl_gene_id, sex) %>%
+  left_join(sif %>% select(ModelID, Sex), by='ModelID') %>%
+  group_by(gene_symbol, ensembl_gene_id, Sex) %>%
   summarize(median=median(tpm)) %>%
   ungroup() %>%
   mutate(log2median=log2(median + 1))
@@ -164,7 +163,7 @@ tpm.medians <- tpm.df.l %>%
 tpm.threshold <- 1
 
 genes.to.be.analyzed <- tpm.medians %>%
-  filter(!is.na(sex)) %>%
+  filter(Sex!='Unknown') %>%
   filter(median >= tpm.threshold) %>%
   pull(ensembl_gene_id) %>%
   unique()
@@ -187,7 +186,7 @@ purity.threshold <- 0
 sample.num.threshold <- 3
 exp.outlier.threshold <-10
 
-df <- tpm.df.nest[11, 'data'] %>% unnest()
+df <- tpm.df.nest[1, 'data'] %>% unnest()
 
 ## 1 < CN < 2
 reg.analysis <- function(df) {
@@ -206,14 +205,14 @@ reg.analysis <- function(df) {
   end.position <- df$end.hg38 %>% unique()
 
   seg.x <- segment.arm %>%
-    rename(Gender=sex) %>%
+    rename(Gender=Sex) %>%
     filter(chr=='X') %>%
     filter(loc.start <= start.position & end >= end.position)
 
   if (nrow(seg.x)!=0) {
     cn.tpm.female <- seg.x %>%
-      inner_join(df, by='DepMapID') %>%
-      left_join(cbio %>% select(DepMapID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='DepMapID') %>%
+      inner_join(df, by='ModelID') %>%
+      left_join(cbio %>% select(ModelID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='ModelID') %>%
       filter(Gender=='Female') %>%
       filter(!is.na(ploidy.class)) %>%
       filter(ploidy.class=='Diploid') %>%
@@ -223,7 +222,7 @@ reg.analysis <- function(df) {
                           RCN >= 2^(female.standard - margin) & RCN <= 2^(female.standard + margin) ~ 'cn2',
                           RCN > 2^(female.standard + margin) ~ 'cn3',
                           TRUE ~ 'other')) %>%
-      group_by(lineage) %>%
+      group_by(OncotreeLineage) %>%
       mutate(mean.exp.cn2=median(tpm[cn=='cn2'])) %>%
       filter(mean.exp.cn2!=0) %>%
       mutate(rel.exp=tpm/mean.exp.cn2) %>%
@@ -232,8 +231,8 @@ reg.analysis <- function(df) {
       ungroup()
 
     cn.tpm.male <- seg.x %>%
-      inner_join(df, by='DepMapID') %>%
-      left_join(cbio %>% select(DepMapID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='DepMapID') %>%
+      inner_join(df, by='ModelID') %>%
+      left_join(cbio %>% select(ModelID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='ModelID') %>%
       filter(Gender=='Male') %>%
       filter(!is.na(ploidy.class)) %>%
       filter(ploidy.class=='Diploid') %>%
@@ -243,7 +242,7 @@ reg.analysis <- function(df) {
                           RCN > 2^(male.standard + margin) & RCN <= 2^(female.standard + margin) ~ 'cn2',
                           RCN > 2^(female.standard + margin) ~ 'cn3',
                           TRUE ~ 'other')) %>%
-      group_by(lineage) %>%
+      group_by(OncotreeLineage) %>%
       mutate(mean.exp.cn1=median(tpm[cn=='cn1'])) %>%
       filter(mean.exp.cn1!=0) %>%
       mutate(rel.exp=tpm/mean.exp.cn1) %>%
@@ -286,7 +285,7 @@ reg.analysis <- function(df) {
 
     df.1to2.female <- df.i %>%
       mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% pull(DepMapID) %>% unique() %>% length(),
+              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% pull(ModelID) %>% unique() %>% length(),
               tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% pull(tpm) %>% median(),
               slope=slope.female1,
               pval=pval.female1,
@@ -295,7 +294,7 @@ reg.analysis <- function(df) {
 
     df.1to2.male <- df.i %>%
       mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% pull(DepMapID) %>% unique() %>% length(),
+              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
               tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% pull(tpm) %>% median(),
               slope=slope.male1,
               pval=pval.male1,
@@ -334,7 +333,7 @@ reg.analysis <- function(df) {
 
     df.2plus.female <- df.i %>%
       mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% pull(DepMapID) %>% unique() %>% length(),
+              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
               tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% pull(tpm) %>% median(),
               slope=slope.female2,
               pval=pval.female2,
@@ -343,7 +342,7 @@ reg.analysis <- function(df) {
 
     df.2plus.male <- df.i %>%
       mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% pull(DepMapID) %>% unique() %>% length(),
+              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
               tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% pull(tpm) %>% median(),
               slope=slope.male2,
               pval=pval.male2,
@@ -369,8 +368,8 @@ reg.analysis <- function(df) {
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[1]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[2]), col='darkgray', linetype='dashed') +
       geom_point(data=. %>% filter(!((Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold)|(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold))), col='gray', size=2) +
-      geom_point(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=lineage), size=2) +
-      geom_point(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=lineage), size=2) +
+      geom_point(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
+      geom_point(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
       geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
       geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
       geom_text(aes(x=-Inf, y=Inf, hjust=-0.05, vjust=1.5, label=paste0('slope = ', slope)), size=10) +
@@ -390,7 +389,7 @@ reg.analysis <- function(df) {
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[1]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[2]), col='darkgray', linetype='dashed') +
       geom_point(data=. %>% filter(!(RCN >= 2^(female.standard) & Purity >= purity.threshold)), col='gray', size=2) +
-      geom_point(data=. %>% filter(RCN >= 2^(female.standard) & Purity >= purity.threshold), aes(col=lineage), size=2) +
+      geom_point(data=. %>% filter(RCN >= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
       geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
       geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
       geom_text(aes(x=-Inf, y=Inf, hjust=-0.05, vjust=1.5, label=paste0('slope = ', slope)), size=10) +

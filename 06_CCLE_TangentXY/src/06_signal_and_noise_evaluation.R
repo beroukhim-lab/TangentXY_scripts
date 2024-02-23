@@ -2,7 +2,7 @@ library(tidyverse)
 library(here)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 probes <- readRDS(file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'probes.rds')) %>%
   rename(Chr=chr) %>%
@@ -44,7 +44,7 @@ doc.t <- readRDS(file=here('05_CCLE_data_preparation/output/03_6_DOC_Preprocessi
 T.signal.noise.list <- parallel::mclapply(doc.t, calc.signal.noise, mc.cores=parallel::detectCores()-2)
 T.signal.noise.df <- T.signal.noise.list %>%
   bind_rows() %>%
-  mutate(DepMapID=names(T.signal.noise.list)) %>%
+  mutate(ModelID=names(T.signal.noise.list)) %>%
   mutate(norm='Pre-Tangent')
 saveRDS(T.signal.noise.df, file=here('06_CCLE_TangentXY/output/06_signal_and_noise_evaluation', 'T.signal.noise.df.rds'), compress=FALSE)
 
@@ -55,19 +55,19 @@ Tn.combined <- readRDS(file=here('06_CCLE_TangentXY/output/03_TangentXY', 'Tn.rd
 Tn.signal.noise.list <- parallel::mclapply(Tn.combined, calc.signal.noise, mc.cores=parallel::detectCores()-2)
 Tn.signal.noise.df <- Tn.signal.noise.list %>%
   bind_rows() %>%
-  mutate(DepMapID=names(Tn.signal.noise.list)) %>%
+  mutate(ModelID=names(Tn.signal.noise.list)) %>%
   mutate(norm='Post-Tangent')
 saveRDS(Tn.signal.noise.df, file=here('06_CCLE_TangentXY/output/06_signal_and_noise_evaluation', 'Tn.signal.noise.df.rds'), compress=FALSE)
 
 
 ## Signal (scatter plot)
 signal <- T.signal.noise.df %>%
-  select(DepMapID, signal) %>%
-  left_join(Tn.signal.noise.df %>% select(DepMapID, signal), by='DepMapID') %>%
-  left_join(sif %>% select(DepMap_ID, sex, lineage), by=c('DepMapID'='DepMap_ID'))
+  select(ModelID, signal) %>%
+  left_join(Tn.signal.noise.df %>% select(ModelID, signal), by='ModelID') %>%
+  left_join(sif %>% select(ModelID, Sex, OncotreeLineage), by='ModelID')
 
-g <- ggplot(signal %>% filter(!is.na(sex)), aes(x=signal.x, y=signal.y)) +
-  geom_point(aes(col=lineage, shape=sex), alpha=0.5) +
+g <- ggplot(signal %>% filter(Sex!='Unknown'), aes(x=signal.x, y=signal.y)) +
+  geom_point(aes(col=OncotreeLineage, shape=Sex), alpha=0.5) +
   geom_abline(slope=1, intercept=0, linetype='dashed') +
   labs(title='Signal', x='Pre-Tangennt', y='Post-Tangent') +
   coord_fixed(ratio = 1, xlim=c(0, NA), ylim=c(0, NA)) +
@@ -82,10 +82,10 @@ signal.noise <- T.signal.noise.df %>%
   bind_rows(Tn.signal.noise.df) %>%
   mutate(sn=signal/noise) %>%
   mutate(norm=factor(.$norm, levels=c('Pre-Tangent', 'Post-Tangent'))) %>%
-  left_join(sif %>% select(DepMap_ID, sex, lineage), by=c('DepMapID'='DepMap_ID'))
+  left_join(sif %>% select(ModelID, Sex, OncotreeLineage), by='ModelID')
 
 ## Signal (violin plot)
-g <- ggplot(signal.noise %>% filter(!is.na(sex)), aes(x=norm, y=signal)) +
+g <- ggplot(signal.noise %>% filter(Sex!='Unknown'), aes(x=norm, y=signal)) +
   geom_violin(fill='red') +
   geom_boxplot(outlier.shape=NA, width=0.05) +
   ylim(0, NA) +
@@ -97,7 +97,7 @@ g <- ggplot(signal.noise %>% filter(!is.na(sex)), aes(x=norm, y=signal)) +
 ggsave(g, file=here('06_CCLE_TangentXY/output/06_signal_and_noise_evaluation', 'Signal_violin.png'), dpi=100, width=10, height=6)
 
 ## Noise (violin plot)
-g <- ggplot(signal.noise %>% filter(!is.na(sex)), aes(x=norm, y=noise)) +
+g <- ggplot(signal.noise %>% filter(Sex!='Unknown'), aes(x=norm, y=noise)) +
   geom_violin(fill='red') +
   geom_boxplot(outlier.shape=NA, width=0.05) +
   ylim(0, NA) +
@@ -108,11 +108,11 @@ g <- ggplot(signal.noise %>% filter(!is.na(sex)), aes(x=norm, y=noise)) +
 ggsave(g, file=here('06_CCLE_TangentXY/output/06_signal_and_noise_evaluation', 'Noise_violin.png'), dpi=100, width=10, height=6)
 
 ## Signal-to-noise (violin plot)
-g <- ggplot(signal.noise %>% filter(!is.na(sex)), aes(x=norm, y=sn)) +
+g <- ggplot(signal.noise %>% filter(Sex!='Unknown'), aes(x=norm, y=sn)) +
   geom_violin(fill='red') +
   geom_boxplot(outlier.shape=NA, width=0.05) +
-  ggbeeswarm::geom_beeswarm(aes(col=lineage, shape=sex), show.legend=F) +
-  geom_line(aes(group=DepMapID)) +
+  ggbeeswarm::geom_beeswarm(aes(col=OncotreeLineage, shape=Sex), show.legend=F) +
+  geom_line(aes(group=ModelID)) +
   labs(x='Number of dimensions in reference plane', y='S/N') +
   theme_classic(base_size=20) +
   theme(axis.title.x=element_blank()) +

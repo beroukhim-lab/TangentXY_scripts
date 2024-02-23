@@ -7,8 +7,9 @@ library(rvest)
 sif <- read_csv(here('05_CCLE_data_preparation/data', 'Model.csv')) # Downloaded from DepMap (https://depmap.org/portal/download/all/)
 
 ## Firstly, retrieve ATCC IDs and DSMZ IDs from cellosaurus
-for (i in 1:nrow(sif)) {
-  rrid <- sif[i, 'RRID']
+karyotype.info.fetcher <- function(rrid) {
+  karyo.df <- data.frame(RRID=rrid)
+
   url <- paste0('https://web.expasy.org/cellosaurus/', rrid)
   html <- read_html(url)
   td <- html %>%
@@ -25,25 +26,21 @@ for (i in 1:nrow(sif)) {
   dsmz.id <- str_extract(dsmz, 'ACC-[0-9]*')
 
   if (length(atcc.id)!=0) {
-    sif[i, 'ATCC.ID'] <- atcc.id[1]
+    karyo.df$ATCC.ID <- atcc.id[1]
   }
   if (length(dsmz.id)!=0) {
-    sif[i, 'DSMZ.ID'] <- dsmz.id[1]
+    karyo.df$DSMZ.ID <- dsmz.id[1]
   }
 
-  print(paste0(i, ' ATCC:', atcc.id, ', DSMZ:', dsmz.id))
-}
+  print(paste0(rrid, ' ATCC:', atcc.id, ', DSMZ:', dsmz.id))
 
-## Secondly, retrieve karyotype information from ATCC and DSMZ
-for (i in 1:nrow(sif)) {
   ## Karyotype from ATCC
-  atcc.id <- sif[i, 'ATCC.ID'] %>% tolower()
-  if (!is.na(atcc.id)) {
+  if (length(atcc.id)==1) {
     url <- paste0('https://www.atcc.org/products/', atcc.id)
 
     html <- try(read_html(url), silent=TRUE)
-    if (class(html)=='try-error') {
-      next
+    if (unique(class(html)=='try-error')) {
+      karyo.df$karyotype.atcc <- NA
     } else {
       title <- html %>%
         html_nodes('[class="product-information__title"]') %>%
@@ -58,23 +55,21 @@ for (i in 1:nrow(sif)) {
           pull(data) %>%
           gsub('\r\n *', '', .)
         if (length(karyotype)!=0) {
-          sif[i, 'karyotype.atcc'] <- karyotype
-          print(paste0(i, ' ATCC: ', karyotype))
+          karyo.df$karyotype.atcc <- karyotype
         } else {
-          next
+          karyo.df$karyotype.atcc <- NA
         }
       }
     }
   }
 
   ## Karyotype from DSMZ
-  dsmz.id <- sif[i, 'DSMZ.ID']
-  if(!is.na(dsmz.id)) {
+  if(length(dsmz.id)==1) {
     url <- paste0('https://www.dsmz.de/collection/catalogue/details/culture/', dsmz.id)
 
     html <- try(read_html(url), silent=TRUE)
-    if (class(html)=='try-error') {
-      next
+    if (unique(class(html)=='try-error')) {
+      karyo.df$karyotype.dsmz <- NA
     } else {
       class <- html %>%
         html_nodes('[class="label"]') %>%
@@ -88,27 +83,31 @@ for (i in 1:nrow(sif)) {
           filter(class=='Cytogenetics: ') %>%
           pull(value)
         if (length(karyotype)!=0) {
-          sif[i, 'karyotype.dsmz'] <- karyotype
-          print(paste0(i, ' DSMZ: ', karyotype))
+          karyo.df$karyotype.dsmz <- karyotype
         } else {
-          next
+          karyo.df$karyotype.dsmz <- NA
         }
       }
     }
   }
 
-  if (is.na(sif[i, 'karyotype.atcc']) & is.na(sif[i, 'karyotype.dsmz'])) {
-    sif[i, 'karyotype.info'] <- 'N'
-  } else {
-    sif[i, 'karyotype.info'] <- 'Y'
-  }
+  return(karyo.df)
 }
+
+RRIDs <- sif %>%
+  filter(!is.na(RRID)) %>%
+  filter(!duplicated(RRID)) %>%
+  pull(RRID)
+
+karyotype.info.list <- parallel::mclapply(RRIDs, karyotype.info.fetcher, mc.cores=parallel::detectCores() - 2)
+karyotype.info <- karyotype.info.list %>%
+  bind_rows()
 
 data.list.file <- here('05_CCLE_data_preparation/data', 'sample.tsv') # Downloaded from Terra (https://app.terra.bio/#workspaces/fccredits-silver-tan-7621/CCLE_v2/data)
 data.list <- read.delim(data.list.file)
 
 wes.bam.list <- data.list %>%
-  select(entity.sample_id, stripped_cell_line_name, hg38_wes_bam, hg38_wes_bai)
+  select(entity.sample_id, stripped_cell_line_name, hg38_wes_bam, hg38_wes_bai) %>%
   filter(hg38_wes_bam!='')
 
 ids.with.bam <- wes.bam.list %>%
@@ -116,6 +115,8 @@ ids.with.bam <- wes.bam.list %>%
   pull(entity.sample_id)
 
 sif <- sif %>%
-  mutate(bam.exists=case_when(DepMap_ID %in% ids.with.bam ~ 'Y', TRUE ~ 'N'))
+  left_join(karyotype.info, by='RRID') %>%
+  mutate(karyotype.info=case_when(is.na(karyotype.atcc) & is.na(karyotype.dsmz) ~ 'N', TRUE ~ 'Y')) %>%
+  mutate(bam.exists=case_when(ModelID %in% ids.with.bam ~ 'Y', TRUE ~ 'N'))
 
 write.csv(sif, file=here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na='', row.names=FALSE)

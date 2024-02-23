@@ -29,7 +29,7 @@ exome.capture.kit.hg38 <- read.delim(file=here('05_CCLE_data_preparation/output/
   mutate(Start=Start + 1)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 Mahmoud.supp.file <- here('05_CCLE_data_preparation/data/CCLE_Mahmoud2019Nature', '41586_2019_1186_MOESM4_ESM.xlsx')
 annotations <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Cell Line Annotations')
@@ -68,10 +68,10 @@ count.zeros <- function(list) {
 
 number.of.zeros <- lapply(dat[!grepl('chrX|chrY', rownames(dat)), ], count.zeros)
 qc.df <- data.frame(num.zero=unlist(number.of.zeros)) %>%
-  rownames_to_column('DepMap_ID') %>%
+  rownames_to_column('ModelID') %>%
   mutate(zero.ratio=num.zero/nrow(dat[!grepl('chrX|chrY', rownames(dat)), ])) %>%
   mutate(too.many.zeros=ifelse(zero.ratio >= zero.col.thresh, TRUE, FALSE)) %>%
-  left_join(sif %>% select(DepMap_ID, cell_line_name, stripped_cell_line_name, sex, primary_disease, lineage), by='DepMap_ID')
+  left_join(sif %>% select(ModelID, CellLineName, StrippedCellLineName, Sex, OncotreePrimaryDisease, OncotreeLineage), by='ModelID')
 saveRDS(qc.df, file=here('05_CCLE_data_preparation/output/03_1_DOC_Preprocessing_removeBadSamplesAndBadProbes', 'qc.df.rds'), compress=FALSE)
 
 ## There were no bad samples
@@ -83,7 +83,7 @@ probes.with.bad.marker <- pos.used %>%
   mutate(zero.ratio=zero.num / length(dat.sample.flt)) %>%
   mutate(bad.marker=case_when(zero.ratio >= zero.row.thresh & Chr!='chrY' ~ TRUE, TRUE ~ FALSE)) # Basically ChrY should be 0 in female samples, so bad markers on ChrY cannot be determined in this way.
 
-dat.sample.flt.male.chrY <- dat.sample.flt[grepl('chrY', rownames(dat.sample.flt)), qc.df %>% filter(DepMap_ID %in% colnames(dat.sample.flt)) %>% filter(sex=='Male') %>% pull(DepMap_ID)]
+dat.sample.flt.male.chrY <- dat.sample.flt[grepl('chrY', rownames(dat.sample.flt)), qc.df %>% filter(ModelID %in% colnames(dat.sample.flt)) %>% filter(Sex=='Male') %>% pull(ModelID)]
 
 probes.with.bad.marker.chrY <- pos.used %>%
   filter(Chr=='chrY') %>%

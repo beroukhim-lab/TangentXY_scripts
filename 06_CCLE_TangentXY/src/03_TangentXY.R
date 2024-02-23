@@ -2,7 +2,7 @@ library(tidyverse)
 library(here)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 doc.t <- readRDS(file=here('05_CCLE_data_preparation/output/03_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'CCLE_WES_hg38_T_QCed_commonCNVremoved.rds'))
 
@@ -38,14 +38,14 @@ saveRDS(Tn.autox.normalized, file=here('06_CCLE_TangentXY/output/03_TangentXY', 
 doc.n <- readRDS(file=here('05_CCLE_data_preparation/output/03_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'CCLE_WES_hg38_N_QCed_commonCNVremoved.rds'))
 
 male.normals <- sif %>%
-  filter(DepMap_ID %in% colnames(doc.n)) %>%
-  filter(sex=='Male') %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% colnames(doc.n)) %>%
+  filter(Sex=='Male') %>%
+  pull(ModelID)
 
 male.tumors <- sif %>%
-  filter(DepMap_ID %in% colnames(doc.t)) %>%
-  filter(sex=='Male') %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% colnames(doc.t)) %>%
+  filter(Sex=='Male') %>%
+  pull(ModelID)
 
 N.male <- doc.n[, male.normals] %>%
   as.matrix()

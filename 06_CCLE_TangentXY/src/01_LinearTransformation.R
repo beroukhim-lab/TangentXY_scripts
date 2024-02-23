@@ -2,7 +2,7 @@ library(tidyverse)
 library(here)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 doc.n <- readRDS(file=here('05_CCLE_data_preparation/output/03_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'CCLE_WES_hg38_N_QCed_commonCNVremoved.rds'))
 
@@ -26,11 +26,11 @@ saveRDS(probes, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'p
 signal.x <- doc.n[grepl('chrX', rownames(doc.n)), ] %>%
   rownames_to_column('locus') %>%
   left_join(probes, by='locus') %>%
-  pivot_longer(names_to='DepMap_ID', values_to='signal', cols=colnames(doc.n)) %>%
-  left_join(sif %>% select(DepMap_ID, cell_line_name, stripped_cell_line_name, sex, primary_disease, lineage), by='DepMap_ID')
+  pivot_longer(names_to='ModelID', values_to='signal', cols=colnames(doc.n)) %>%
+  left_join(sif %>% select(ModelID, CellLineName, StrippedCellLineName, Sex, OncotreePrimaryDisease, OncotreeLineage), by='ModelID')
 
-g <- ggplot(signal.x, aes(x=signal, group=DepMap_ID)) +
-  geom_density(aes(fill=sex), alpha=0.25) +
+g <- ggplot(signal.x, aes(x=signal, group=ModelID)) +
+  geom_density(aes(fill=Sex), alpha=0.25) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip() +
@@ -45,14 +45,14 @@ ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalS
 ## Linear transformation on male chrX signals
 ## Only male chrX is linear transformed so that it has the same mean and SD as female chrX
 female.samples <- sif %>%
-  filter(DepMap_ID %in% colnames(doc.n)) %>%
-  filter(sex=='Female') %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% colnames(doc.n)) %>%
+  filter(Sex=='Female') %>%
+  pull(ModelID)
 
 male.samples <- sif %>%
-  filter(DepMap_ID %in% colnames(doc.n)) %>%
-  filter(sex=='Male') %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% colnames(doc.n)) %>%
+  filter(Sex=='Male') %>%
+  pull(ModelID)
 
 female.x.mean <- doc.n[grepl('chrX', rownames(doc.n)),] %>%
   select(female.samples) %>%
@@ -77,10 +77,10 @@ male.x.sd <- doc.n[grepl('chrX', rownames(doc.n)),] %>%
 doc.n.xy.transformed <- doc.n[grepl('chrX|chrY', rownames(doc.n)), ] %>%
   rownames_to_column('locus') %>%
   separate(col=locus, into=c('Chr', 'pos'), sep=':') %>%
-  pivot_longer(names_to='DepMap_ID', values_to='signal', cols=-c('Chr', 'pos')) %>%
-  mutate(signal=case_when(DepMap_ID %in% male.samples & Chr=='chrX' ~ ((signal - male.x.mean)/male.x.sd) * female.x.sd + female.x.mean,
+  pivot_longer(names_to='ModelID', values_to='signal', cols=-c('Chr', 'pos')) %>%
+  mutate(signal=case_when(ModelID %in% male.samples & Chr=='chrX' ~ ((signal - male.x.mean)/male.x.sd) * female.x.sd + female.x.mean,
                           TRUE ~ signal)) %>%
-  pivot_wider(names_from='DepMap_ID', values_from='signal') %>%
+  pivot_wider(names_from='ModelID', values_from='signal') %>%
   unite(col=locus, c('Chr', 'pos'), sep=':') %>%
   column_to_rownames('locus')
 
@@ -90,11 +90,11 @@ saveRDS(doc.n.transformed, file=here('06_CCLE_TangentXY/output/01_LinearTransfor
 
 ## Check the signal distribution of chrX after Z-score conversion
 signal.x.lt <- doc.n.transformed[grepl('chrX', rownames(doc.n.transformed)),] %>%
-  pivot_longer(names_to='DepMap_ID', values_to='signal', cols=everything()) %>%
-  left_join(sif %>% select(DepMap_ID, cell_line_name, stripped_cell_line_name, sex, primary_disease, lineage), by='DepMap_ID')
+  pivot_longer(names_to='ModelID', values_to='signal', cols=everything()) %>%
+  left_join(sif %>% select(ModelID, CellLineName, StrippedCellLineName, Sex, OncotreePrimaryDisease, OncotreeLineage), by='ModelID')
 
-g <- ggplot(signal.x.lt, aes(x=signal, group=DepMap_ID)) +
-  geom_density(aes(fill=sex), alpha=0.25) +
+g <- ggplot(signal.x.lt, aes(x=signal, group=ModelID)) +
+  geom_density(aes(fill=Sex), alpha=0.25) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip() +

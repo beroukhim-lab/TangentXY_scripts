@@ -4,7 +4,7 @@ library(here)
 library(DNAcopy)
 
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 ## Run CBS on Prototype Tangent-normalized samples
 Tn <- readRDS(file=here('06_CCLE_TangentXY/output/04_PrototypeTangent', 'Tn_PrototypeTangent.rds'))
@@ -43,8 +43,8 @@ if (!dir.exists(out.dir.xy)) {
 for (i in 1:length(sample.names)) {
   sample.i <- sample.names[i]
   gender.i <- sif %>%
-    filter(DepMap_ID==sample.i) %>%
-    pull(sex)
+    filter(ModelID==sample.i) %>%
+    pull(Sex)
   print(paste(i, sample.i, gender.i))
 
   png(file=here(out.dir.whole, paste0(i, '_PrototypeTangent_CBS_', sample.i, '_', gender.i, '.png')))
@@ -66,8 +66,8 @@ samples <- c(male1, female1)
 for (i in 1:length(samples)) {
   sample.i <- samples[i]
   gender.i <- sif %>%
-    filter(DepMap_ID==sample.i) %>%
-    pull(sex)
+    filter(ModelID==sample.i) %>%
+    pull(Sex)
   print(paste(i, sample.i, gender.i))
 
   pdf(file=here('06_CCLE_TangentXY/output/07_CBS', paste0(i, '_', sample.i, '_', gender.i, '_ProtoTangent_whole.pdf')))

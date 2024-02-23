@@ -28,13 +28,13 @@ saveRDS(dat.gcnv.flt, file=here('05_CCLE_data_preparation/output/03_6_DOC_Prepro
 
 ## Separate non-cancerous cell lines and cancer cell lines for Tangent
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
-  mutate(DepMap_ID=gsub('-', '.', DepMap_ID))
+  mutate(ModelID=gsub('-', '.', ModelID))
 
 normal.samples <- sif %>%
-  filter(DepMap_ID %in% colnames(dat.gcnv.flt)) %>%
-  filter(primary_disease=='Non-Cancerous') %>%
-  filter(!is.na(sex)) %>%
-  pull(DepMap_ID)
+  filter(ModelID %in% colnames(dat.gcnv.flt)) %>%
+  filter(OncotreePrimaryDisease=='Non-Cancerous') %>%
+  filter(Sex!='Unknown') %>%
+  pull(ModelID)
 
 dat.for.analysis.n <- dat.gcnv.flt %>%
   as.data.frame() %>%
