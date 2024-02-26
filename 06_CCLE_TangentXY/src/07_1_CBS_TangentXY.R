@@ -40,7 +40,7 @@ if (!dir.exists(out.dir.xy)) {
   dir.create(out.dir.xy, recursive=TRUE)
 }
 
-for (i in 1:length(sample.names)) {
+for (i in seq_along(sample.names)) {
   sample.i <- sample.names[i]
   gender.i <- sif %>%
     filter(ModelID==sample.i) %>%
@@ -52,29 +52,6 @@ for (i in 1:length(sample.names)) {
   dev.off()
 
   png(file=here(out.dir.xy, paste0(i, '_TangentXY_CBS_', sample.i, '_', gender.i, '.png')))
-  plotSample(segment.smoothed.CNA.obj.xy, sampleid=sample.i, plot.type="w", chromlist=c('chrX', 'chrY'), ylim=c(-2.5, 2.5))
-  dev.off()
-}
-
-
-## Make figures for publication
-male1 <- 'ACH.000130'
-female1 <- 'ACH.000462'
-
-samples <- c(male1, female1)
-
-for (i in 1:length(samples)) {
-  sample.i <- samples[i]
-  gender.i <- sif %>%
-    filter(ModelID==sample.i) %>%
-    pull(Sex)
-  print(paste(i, sample.i, gender.i))
-
-  pdf(file=here('06_CCLE_TangentXY/output/07_CBS', paste0(i, '_', sample.i, '_', gender.i, '_TangentXY_whole.pdf')))
-  plotSample(segment.smoothed.CNA.obj.xy, sampleid=sample.i, plot.type="w", ylim=c(-2.5, 2.5))
-  dev.off()
-
-  pdf(file=here('06_CCLE_TangentXY/output/07_CBS', paste0(i, '_', sample.i, '_', gender.i, '_TangentXY_XY.pdf')))
   plotSample(segment.smoothed.CNA.obj.xy, sampleid=sample.i, plot.type="w", chromlist=c('chrX', 'chrY'), ylim=c(-2.5, 2.5))
   dev.off()
 }

@@ -23,6 +23,7 @@ sample.with.wes.depmapid <- annotations %>%
 samples.to.be.analyzed <- sif %>%
   filter(ModelID %in% sample.with.wes.depmapid) %>%
   filter(OncotreeLineage!='Fibroblast') %>%
+  filter(Sex!='Unknown') %>%
   pull(ModelID)
 
 cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
@@ -163,7 +164,6 @@ tpm.medians <- tpm.df.l %>%
 tpm.threshold <- 1
 
 genes.to.be.analyzed <- tpm.medians %>%
-  filter(Sex!='Unknown') %>%
   filter(median >= tpm.threshold) %>%
   pull(ensembl_gene_id) %>%
   unique()
@@ -223,9 +223,11 @@ reg.analysis <- function(df) {
                           RCN > 2^(female.standard + margin) ~ 'cn3',
                           TRUE ~ 'other')) %>%
       group_by(OncotreeLineage) %>%
-      mutate(mean.exp.cn2=median(tpm[cn=='cn2'])) %>%
-      filter(mean.exp.cn2!=0) %>%
-      mutate(rel.exp=tpm/mean.exp.cn2) %>%
+      # mutate(n=n()) %>%
+      # filter(n >= 5) %>%
+      mutate(median.exp.cn2=mean(tpm[cn=='cn2'])) %>%
+      filter(median.exp.cn2!=0) %>%
+      mutate(rel.exp=tpm/median.exp.cn2) %>%
       filter(!is.na(rel.exp)) %>%
       filter(rel.exp < exp.outlier.threshold) %>%
       ungroup()
@@ -243,9 +245,11 @@ reg.analysis <- function(df) {
                           RCN > 2^(female.standard + margin) ~ 'cn3',
                           TRUE ~ 'other')) %>%
       group_by(OncotreeLineage) %>%
-      mutate(mean.exp.cn1=median(tpm[cn=='cn1'])) %>%
-      filter(mean.exp.cn1!=0) %>%
-      mutate(rel.exp=tpm/mean.exp.cn1) %>%
+      # mutate(n=n()) %>%
+      # filter(n >= 5) %>%
+      mutate(median.exp.cn1=mean(tpm[cn=='cn1'])) %>%
+      filter(median.exp.cn1!=0) %>%
+      mutate(rel.exp=tpm/median.exp.cn1) %>%
       filter(!is.na(rel.exp)) %>%
       filter(rel.exp < exp.outlier.threshold) %>%
       ungroup()
@@ -266,7 +270,7 @@ reg.analysis <- function(df) {
       filter(Purity >= purity.threshold)
 
     if (nrow(female.cn1.samples) >= sample.num.threshold) {
-      reg.female1 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard)))
+      reg.female1 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard + margin)))
       slope.female1 <- summary(reg.female1)$coefficients['RCN','Estimate']
       pval.female1 <- summary(reg.female1)$coefficients['RCN','Pr(>|t|)']
     } else {
@@ -275,7 +279,7 @@ reg.analysis <- function(df) {
     }
 
     if (nrow(male.cn2.samples) >= sample.num.threshold) {
-      reg.male1 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)))
+      reg.male1 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin)))
       slope.male1 <- summary(reg.male1)$coefficients['RCN','Estimate']
       pval.male1 <- summary(reg.male1)$coefficients['RCN','Pr(>|t|)']
     } else {
@@ -284,18 +288,18 @@ reg.analysis <- function(df) {
     }
 
     df.1to2.female <- df.i %>%
-      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% pull(ModelID) %>% unique() %>% length(),
-              tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard) %>% pull(tpm) %>% median(),
+      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard + margin) %>% nrow(),
+              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard + margin) %>% pull(ModelID) %>% unique() %>% length(),
+              tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^female.standard + margin) %>% pull(tpm) %>% median(),
               slope=slope.female1,
               pval=pval.female1,
               cn='1 < CN < 2',
               Gender='Female')
 
     df.1to2.male <- df.i %>%
-      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
-              tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard)) %>% pull(tpm) %>% median(),
+      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin)) %>% nrow(),
+              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin)) %>% pull(ModelID) %>% unique() %>% length(),
+              tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin)) %>% pull(tpm) %>% median(),
               slope=slope.male1,
               pval=pval.male1,
               cn='1 < CN < 2',
@@ -314,7 +318,7 @@ reg.analysis <- function(df) {
       filter(cn=='cn3')
 
     if (nrow(female.cn3.samples) >= sample.num.threshold) {
-      reg.female2 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)))
+      reg.female2 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard - margin)))
       slope.female2 <- summary(reg.female2)$coefficients['RCN','Estimate']
       pval.female2 <- summary(reg.female2)$coefficients['RCN','Pr(>|t|)']
     } else {
@@ -323,7 +327,7 @@ reg.analysis <- function(df) {
     }
 
     if (nrow(male.cn3.samples) >= sample.num.threshold) {
-      reg.male2 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)))
+      reg.male2 <- lm(rel.exp ~ RCN, data=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard - margin)))
       slope.male2 <- summary(reg.male2)$coefficients['RCN','Estimate']
       pval.male2 <- summary(reg.male2)$coefficients['RCN','Pr(>|t|)']
     } else {
@@ -332,18 +336,18 @@ reg.analysis <- function(df) {
     }
 
     df.2plus.female <- df.i %>%
-      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
-              tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard)) %>% pull(tpm) %>% median(),
+      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard - margin)) %>% nrow(),
+              samples=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard - margin)) %>% pull(ModelID) %>% unique() %>% length(),
+              tpm.median=cn.tpm.flt %>% filter(Gender=='Female' & RCN >= 2^(female.standard - margin)) %>% pull(tpm) %>% median(),
               slope=slope.female2,
               pval=pval.female2,
               cn='2 < CN',
               Gender='Female')
 
     df.2plus.male <- df.i %>%
-      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% nrow(),
-              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% pull(ModelID) %>% unique() %>% length(),
-              tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard)) %>% pull(tpm) %>% median(),
+      mutate(nrow=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard - margin)) %>% nrow(),
+              samples=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard - margin)) %>% pull(ModelID) %>% unique() %>% length(),
+              tpm.median=cn.tpm.flt %>% filter(Gender=='Male' & RCN >= 2^(female.standard - margin)) %>% pull(tpm) %>% median(),
               slope=slope.male2,
               pval=pval.male2,
               cn='2 < CN',
@@ -367,11 +371,11 @@ reg.analysis <- function(df) {
       geom_vline(data=. %>% filter(Gender=='Female'), aes(xintercept=female.dotted.lines[2]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[1]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[2]), col='darkgray', linetype='dashed') +
-      geom_point(data=. %>% filter(!((Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold)|(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold))), col='gray', size=2) +
-      geom_point(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
-      geom_point(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
-      geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
-      geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
+      geom_point(data=. %>% filter(!((Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard + margin) & Purity >= purity.threshold)|(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard) & Purity >= purity.threshold))), col='gray', size=2) +
+      geom_point(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard + margin) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
+      geom_point(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
+      geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(-1.2) & RCN <= 2^(female.standard + margin) & Purity >= purity.threshold), method='lm') +
+      geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(male.standard - margin) & RCN <= 2^(female.standard + margin) & Purity >= purity.threshold), method='lm') +
       geom_text(aes(x=-Inf, y=Inf, hjust=-0.05, vjust=1.5, label=paste0('slope = ', slope)), size=10) +
       scale_x_continuous(breaks=c(0, 0.5, 1, 1.5, 2, 2.5, 3), limits=c(0, NA)) +
       facet_wrap(~Gender, nrow=2) +
@@ -388,10 +392,10 @@ reg.analysis <- function(df) {
       geom_vline(data=. %>% filter(Gender=='Female'), aes(xintercept=female.dotted.lines[2]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[1]), col='darkgray', linetype='dashed') +
       geom_vline(data=. %>% filter(Gender=='Male'), aes(xintercept=male.dotted.lines[2]), col='darkgray', linetype='dashed') +
-      geom_point(data=. %>% filter(!(RCN >= 2^(female.standard) & Purity >= purity.threshold)), col='gray', size=2) +
-      geom_point(data=. %>% filter(RCN >= 2^(female.standard) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
-      geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
-      geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(female.standard) & Purity >= purity.threshold), method='lm') +
+      geom_point(data=. %>% filter(!(RCN >= 2^(female.standard - margin) & Purity >= purity.threshold)), col='gray', size=2) +
+      geom_point(data=. %>% filter(RCN >= 2^(female.standard - margin) & Purity >= purity.threshold), aes(col=OncotreeLineage), size=2) +
+      geom_smooth(data=. %>% filter(Gender=='Female' & RCN >= 2^(female.standard - margin) & Purity >= purity.threshold), method='lm') +
+      geom_smooth(data=. %>% filter(Gender=='Male' & RCN >= 2^(female.standard - margin) & Purity >= purity.threshold), method='lm') +
       geom_text(aes(x=-Inf, y=Inf, hjust=-0.05, vjust=1.5, label=paste0('slope = ', slope)), size=10) +
       scale_x_continuous(breaks=c(0, 0.5, 1, 1.5, 2, 2.5, 3), limits=c(0, NA)) +
       facet_wrap(~Gender, nrow=2) +
