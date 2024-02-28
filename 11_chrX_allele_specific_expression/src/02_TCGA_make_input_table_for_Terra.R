@@ -1,7 +1,7 @@
 library(tidyverse)
 library(here)
 
-terra.sample.file <- here('11_chrX_allele_specific_expression/data/Terra_output', 'sample.tsv')
+terra.sample.file <- here('11_chrX_allele_specific_expression/data/TCGA_Terra_output', 'sample.tsv')
 terra.sample <- read.delim(terra.sample.file, na.strings=c('', 'NA')) %>%
   select(c('entity.sample_id', 'tcga_sample_id', 'participant', 'sample_type', 'mRNASeq_bam_analysis_id', 'mRNASeq_bai_path', 'mRNASeq_bam_path')) %>%
   mutate(tcga_participant_id=sub('-[0-9]{2}$', '', tcga_sample_id)) %>%

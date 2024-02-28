@@ -48,7 +48,7 @@ terra.table <- read.delim(file=here('11_chrX_allele_specific_expression/output/0
 
 
 ## Analysis on chrX
-ase.chrx.dirs <- Sys.glob(file.path(here('11_chrX_allele_specific_expression/data/Terra_output'), 'chrX', '*', 'ASEReadCounterWorkflow', '*', 'call-ASEReadCounter'))
+ase.chrx.dirs <- Sys.glob(file.path(here('11_chrX_allele_specific_expression/data/TCGA_Terra_output'), 'chrX', '*', 'ASEReadCounterWorkflow', '*', 'call-ASEReadCounter'))
 ase.chrx.files <- list.files(ase.chrx.dirs , pattern='_ASE_chrX.txt$', recursive=TRUE, full.names=TRUE)
 ase.chrx.ids <- sub('_ASE_chrX.txt$', '', basename(ase.chrx.files)) %>%
   gsub('-', '.', .)
@@ -180,7 +180,7 @@ for (i in seq_along(tumor.types)) {
   tumor_i <- tumor.types[i]
   print(tumor_i)
 
-  ase.auto.dirs <- Sys.glob(file.path(here('11_chrX_allele_specific_expression/data/Terra_output'), 'autosomes', tumor_i, '*', 'ASEReadCounterWorkflow', '*', 'call-ASEReadCounter'))
+  ase.auto.dirs <- Sys.glob(file.path(here('11_chrX_allele_specific_expression/data/TCGA_Terra_output'), 'autosomes', tumor_i, '*', 'ASEReadCounterWorkflow', '*', 'call-ASEReadCounter'))
   ase.auto.files <- list.files(ase.auto.dirs, , pattern='_ASE_autosomes.txt$', recursive=TRUE, full.names=TRUE)
   ase.auto.ids <- sub('_ASE_autosomes.txt$', '', basename(ase.auto.files)) %>%
     gsub('-', '.', .)

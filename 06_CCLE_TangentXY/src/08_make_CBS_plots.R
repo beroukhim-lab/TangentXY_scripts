@@ -25,7 +25,10 @@ segment.smoothed.CNA.obj.xy <- readRDS(file=here('06_CCLE_TangentXY/output/07_CB
 
 
 ## Make figures for publication
-samples <- c('ACH.000130', 'ACH.000462')
+female.samples <- c('ACH.000462', 'ACH.000081', 'ACH.000944', 'ACH.000812', 'ACH.000435')
+male.samples <- c('ACH.000130', 'ACH.000065', 'ACH.000156', 'ACH.000158', 'ACH.000342', 'ACH.000492')
+samples <- c(female.samples, male.samples)
+karyotypes <- c('<2n>X, -X', '<2n>XX', '<2n>X, -X', '<3n>XXX', '<3n>XX, -X', '<2n>XY', '<2n>XY', '<2n>X, -Y', '<3n>XXYY', '<4n>XX, -Y, -Y', '<2n>X, -Y')
 
 ggplotSample <- function(sample.id) {
   gender <- sif %>%
@@ -33,6 +36,17 @@ ggplotSample <- function(sample.id) {
     pull(Sex)
 
   print(paste(sample.id, gender))
+
+  i <- grep(sample.id, samples)
+  karyotype <- karyotypes[i]
+  cell.line.name <- sif %>%
+    filter(ModelID==sample.id) %>%
+    pull(CellLineName)
+  primary.disease <- sif %>%
+    filter(ModelID==sample.id) %>%
+    pull(OncotreePrimaryDisease)
+
+  title <- paste0(sub('\\.', '-', sample.id), ', ', cell.line.name, ' (', primary.disease, ')\n', 'Ploidy & karyotype: ', karyotype)
 
   ## Prototype Tangent
   points.pr <- segment.smoothed.CNA.obj.pr$data[[sample.id]] %>%
@@ -44,7 +58,7 @@ ggplotSample <- function(sample.id) {
 
   segments.pr <- segment.smoothed.CNA.obj.pr$output %>%
     filter(ID==sample.id) %>%
-    left_join(points %>% select(chr, start, loci), by=c('chrom'='chr', 'loc.start'='start')) %>%
+    left_join(points.pr %>% select(chr, start, loci), by=c('chrom'='chr', 'loc.start'='start')) %>%
     rename(start.loci=loci) %>%
     mutate(end.loci=start.loci + num.mark -1)
 
@@ -85,7 +99,7 @@ ggplotSample <- function(sample.id) {
 
   segments.xy <- segment.smoothed.CNA.obj.xy$output %>%
     filter(ID==sample.id) %>%
-    left_join(points %>% select(chr, start, loci), by=c('chrom'='chr', 'loc.start'='start')) %>%
+    left_join(points.xy %>% select(chr, start, loci), by=c('chrom'='chr', 'loc.start'='start')) %>%
     rename(start.loci=loci) %>%
     mutate(end.loci=start.loci + num.mark -1)
 
@@ -117,10 +131,13 @@ ggplotSample <- function(sample.id) {
     theme(zoom=element_rect(linewidth=0.5, linetype='dashed')) +
     theme(zoom.y = element_blank(), validate = FALSE)
 
-  g <- ggpubr::ggarrange(g.pr, g.xy, nrow=1, align='hv')
+  g.title <- ggpubr::as_ggplot(ggpubr::text_grob(title, size=20))
+  g.main <- ggpubr::ggarrange(g.pr, g.xy, nrow=1, align='hv')
+  # g <- ggpubr::annotate_figure(g.main, top=ggpubr::text_grob(title, hjust=0, size=30))
+  g <- ggpubr::ggarrange(g.title, g.main, ncol=1, heights=c(1, 10))
 
-  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.pdf')), width=10, height=8, useDingbats=TRUE)
-  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.png')), dpi=100, width=10, height=8)
+  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.pdf')), width=10, height=10, useDingbats=TRUE)
+  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.png')), bg='white', dpi=100, width=10, height=10)
 }
 
 parallel::mclapply(samples, ggplotSample, mc.cores=parallel::detectCores() - 2)
