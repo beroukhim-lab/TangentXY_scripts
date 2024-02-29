@@ -47,6 +47,19 @@ cbio <- read.delim(cbio.file) %>%
   mutate(ModelID=gsub('-', '.', DepMapID)) %>%
   left_join(annotations %>% select(ModelID, tcga_code), by='ModelID')
 
+unique.remove.na <- function(vector) {
+  unique.vector <- unique(vector)
+  if (anyNA(unique.vector)) {
+    unique.vector <- unique.vector[!is.na(unique.vector)]
+  }
+  return(unique.vector)
+}
+
+purity.ploidy <- cbio %>%
+  select(ModelID, Purity, Ploidy, GenomeDoublings) %>%
+  group_by(ModelID) %>%
+  summarize(Purity=unique.remove.na(Purity), Ploidy=unique.remove.na(Ploidy), GenomeDoublings=unique.remove.na(GenomeDoublings))
+
 segment.smoothed.CNA.obj <- readRDS(file=here('06_CCLE_TangentXY/output/07_CBS', 'CBS_TangentXY.rds'))
 
 segment <- segment.smoothed.CNA.obj$output %>%
@@ -170,7 +183,7 @@ sample.amp.del <- arm.amp.del %>%
   mutate(chr.type=case_when(!chr %in% c('X', 'Y') ~ 'autosome',
                             chr=='X' ~ 'chrX',
                             chr=='Y' ~ 'chrY')) %>%
-  left_join(cbio %>% select(ModelID, Purity, Ploidy, GenomeDoublings), by='ModelID') %>%
-  left_join(annotations %>% select(ModelID, tcga_code)) %>%
+  left_join(purity.ploidy, by='ModelID') %>%
+  left_join(annotations %>% select(ModelID, tcga_code), by='ModelID') %>%
   as.data.frame()
 saveRDS(sample.amp.del, here('07_SCNAs_in_chrX_and_chrY/output/02_CCLE_SCNA_classification', 'sample.amp.del.rds'), compress=FALSE)

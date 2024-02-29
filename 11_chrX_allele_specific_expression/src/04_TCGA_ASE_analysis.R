@@ -1,12 +1,9 @@
 library(tidyverse)
 library(here)
 
-memuse::Sys.meminfo()
-parallel::detectCores()
-
 sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
 
-gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukianinen2017Nature', 'Suppl.Table.1.xlsx')
+gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukiainen2017Nature', 'Suppl.Table.1.xlsx')
 gene.type <- readxl::read_xlsx(gene.type.file, skip=1) %>%
   as.data.frame() %>%
   setNames(gsub(' ', '_', colnames(.))) %>%
@@ -27,22 +24,10 @@ gene.type.expanded.list <- lapply(gene.type.list, expand.position)
 gene.type.expanded <- gene.type.expanded.list %>%
   bind_rows()
 
-snp.annot.df <- readRDS(file=here('11_chrX_allele_specific_expression/output/03_annotate_SNPs', 'snp.annot.df.rds'))
+snp.annot.df <- readRDS(file=here('11_chrX_allele_specific_expression/output/03_TCGA_annotate_SNPs', 'snp.annot.df.rds'))
 
 sample.amp.del <- readRDS(file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'sample.amp.del.rds')) %>%
   mutate(TCGA.SampleID=paste(TCGA.ID, type, sep='.'))
-
-absolute.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'TCGA_mastercalls.abs_tables_JSedit.fixed.txt')
-absolute <- read.delim(absolute.file) %>%
-  rename(barcode=sample) %>%
-  separate(col=array, into=c('project', 'tss', 'participant', 'sample'), sep='-') %>%
-  unite(col=TCGA.ID, c('project', 'tss', 'participant'), sep='.') %>%
-  mutate(type=case_when(sample=='01' ~ 'TP',
-                        sample=='02' ~ 'TR',
-                        sample=='03' ~ 'TB',
-                        sample=='05' ~ 'TAP',
-                        sample=='06' ~ 'TM')) %>%
-  left_join(sif, by=c('TCGA.ID', 'type'))
 
 terra.table <- read.delim(file=here('11_chrX_allele_specific_expression/output/02_TCGA_make_input_table_for_Terra', 'sample_table_for_Terra.tsv'))
 
@@ -77,7 +62,6 @@ ase.chrx.annot <- ase.chrx.df %>%
   mutate(region=case_when(position < 2699520 ~ 'PAR1', position > 155260560 ~ 'PAR2', TRUE ~ 'non-PAR')) %>%
   left_join(snp.annot.df %>% rename(exon.intron=region), by=c('Chr'='CHROM', 'position'='POS')) %>%
   left_join(sample.amp.del, by=c('SampleID', 'Chr'='chr')) %>%
-  left_join(absolute %>% select(SampleID, Subclonal.genome.fraction), by='SampleID') %>%
   as.data.frame()
 saveRDS(ase.chrx.annot, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'ase.chrx.annot.rds'), compress=FALSE)
 
@@ -110,6 +94,7 @@ ase.chrx.annot.major.rate.female <- ase.chrx.annot.major.rate %>%
   group_by(SampleID, karyo.class, ploidy.class, project) %>%
   summarize(major.rate.median=unique(major.rate.median), major.rate.mean=unique(major.rate.mean), points.per.sample=n(), sd=unique(sd)) %>%
   ungroup()
+saveRDS(ase.chrx.annot.major.rate.female, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'ase.chrx.annot.major.rate.female.rds'), compress=FALSE)
 
 ## No CNAs/Whole amp vs ASE value (tumor types merged)
 stat.test.uni <- ase.chrx.annot.major.rate.female %>%
@@ -123,7 +108,7 @@ stat.test.ploidy <- ase.chrx.annot.major.rate.female %>%
   group_by(karyo.class) %>%
   rstatix::wilcox_test(major.rate.median ~ ploidy.class)
 
-g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.mean)) +
+g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(0.5), alpha=0.5) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
@@ -196,7 +181,6 @@ for (i in seq_along(tumor.types)) {
     mutate(Chr=sub('chr', '', contig)) %>%
     left_join(snp.annot.df %>% rename(exon.intron=region), by=c('Chr'='CHROM', 'position'='POS')) %>%
     left_join(sample.amp.del, by=c('SampleID', 'Chr'='chr')) %>%
-    left_join(absolute %>% select(SampleID, Subclonal.genome.fraction), by='SampleID') %>%
     as.data.frame()
   saveRDS(ase.auto.annot, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', paste0('ase.auto.annot_', tumor_i, '.rds')), compress=FALSE)
 }

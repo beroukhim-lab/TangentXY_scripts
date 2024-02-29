@@ -37,6 +37,19 @@ cbio <- read.delim(cbio.file) %>%
                                 Ploidy < polyploidy.threshold & GenomeDoublings==0 ~ 'Diploid',
                                 TRUE ~ 'Polyploid'))
 
+unique.remove.na <- function(vector) {
+  unique.vector <- unique(vector)
+  if (anyNA(unique.vector)) {
+    unique.vector <- unique.vector[!is.na(unique.vector)]
+  }
+  return(unique.vector)
+}
+
+purity.ploidy <- cbio %>%
+  select(ModelID, Purity, Ploidy, GenomeDoublings) %>%
+  group_by(ModelID) %>%
+  summarize(Purity=unique.remove.na(Purity), Ploidy=unique.remove.na(Ploidy), GenomeDoublings=unique.remove.na(GenomeDoublings), ploidy.class=unique.remove.na(ploidy.class))
+
 ## Analysis on chrX
 ## Gene list (Normal gene/Escape gene)
 gene.type.file <- here('10_chrX_SCNA_vs_gene_expression/data/XCI_Tukiainen2017Nature', 'Suppl.Table.1.xlsx')
@@ -212,7 +225,7 @@ reg.analysis <- function(df) {
   if (nrow(seg.x)!=0) {
     cn.tpm.female <- seg.x %>%
       inner_join(df, by='ModelID') %>%
-      left_join(cbio %>% select(ModelID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='ModelID') %>%
+      left_join(purity.ploidy, by='ModelID') %>%
       filter(Gender=='Female') %>%
       filter(!is.na(ploidy.class)) %>%
       filter(ploidy.class=='Diploid') %>%
@@ -234,7 +247,7 @@ reg.analysis <- function(df) {
 
     cn.tpm.male <- seg.x %>%
       inner_join(df, by='ModelID') %>%
-      left_join(cbio %>% select(ModelID, Purity, Ploidy, GenomeDoublings, ploidy.class), by='ModelID') %>%
+      left_join(purity.ploidy, by='ModelID') %>%
       filter(Gender=='Male') %>%
       filter(!is.na(ploidy.class)) %>%
       filter(ploidy.class=='Diploid') %>%

@@ -69,19 +69,18 @@ ase.chrx.annot <- ase.df %>%
   filter(!is.na(gene.type)) %>%
   mutate(gene.type=str_to_title(gene.type)) %>%
   mutate(gene.type=factor(.$gene.type, levels=c('Inactive', 'Escape', 'Variable'))) %>%
-  group_by(DepMapID, position) %>%
+  group_by(ModelID, position) %>%
   mutate(gene.type.unique=gene.type %>% unique() %>% sort() %>% paste(collapse='_')) %>%
   mutate(gene.type.number=gene.type %>% unique() %>% length()) %>%
   ungroup() %>%
   filter(gene.type.number==1) %>%
-  distinct(DepMapID, position, .keep_all=TRUE) %>%
+  distinct(ModelID, position, .keep_all=TRUE) %>%
   mutate(arm=case_when(position < 58632012 ~ 'p', position > 61632012 ~ 'q')) %>% #Check centromere position with rCGH::hg38
   mutate(region=case_when(position < 2781479 ~ 'PAR1', position > 156030895 ~ 'PAR2', TRUE ~ 'non-PAR')) %>%
-  left_join(sample.amp.del %>% mutate(contig=paste0('chr', chr)), by=c('DepMapID', 'contig')) %>%
-  mutate(Released.to.SRA=case_when(DepMapID %in% sample.with.wes.depmapid ~ TRUE, TRUE ~ FALSE)) %>%
+  left_join(sample.amp.del %>% mutate(contig=paste0('chr', chr)), by=c('ModelID', 'contig')) %>%
+  mutate(Released.to.SRA=case_when(ModelID %in% sample.with.wes.depmapid ~ TRUE, TRUE ~ FALSE)) %>%
   as.data.frame()
-saveRDS(ase.chrx.annot, file=here('output/21_ASEReadCounter', 'ase.chrx.annot.RData'), compress=FALSE)
-# ase.chrx.annot <- readRDS(file=here('output/21_ASEReadCounter', 'ase.chrx.annot.RData'))
+saveRDS(ase.chrx.annot, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'ase.chrx.annot.rds'), compress=FALSE)
 
 ase.chrx.annot.major.rate <- ase.chrx.annot %>%
   mutate(lowMapQ.rate=lowMAPQDepth/rawDepth) %>%
@@ -90,143 +89,57 @@ ase.chrx.annot.major.rate <- ase.chrx.annot %>%
   mutate(alt=altCount/totalCount) %>%
   mutate(major.rate=case_when(ref > alt ~ ref, ref < alt ~ alt, ref==alt ~ ref))
 
-ase.chrx.annot.major.rate.summary <- ase.chrx.annot.major.rate %>%
-  filter(exon.intron=='Exon') %>%
-  mutate(ploidy.class=case_when(Ploidy < 2.5 & GenomeDoublings==0 ~ 'Diploid', Ploidy >= 2.5 | GenomeDoublings > 0 ~ 'Polyploid')) %>%
-  group_by(DepMapID, gene.type) %>%
-  mutate(major.rate.median=median(major.rate)) %>%
-  mutate(sd=sd(major.rate)) %>%
-  mutate(points.no=n()) %>%
-  ungroup()
-
-lowBaseQ.threshold <- 1
 min.points.per.sample <- 20
 
-ase.chrx.annot.major.rate.summary2 <- ase.chrx.annot.major.rate.summary %>%
-  filter(sex=='Female') %>%
+ase.chrx.annot.major.rate.female <- ase.chrx.annot.major.rate %>%
+  filter(Sex=='Female') %>%
+  filter(exon.intron=='Exon') %>%
+  filter(gene.type=='Inactive') %>%
+  group_by(ModelID) %>%
+  mutate(points.no=n()) %>%
+  filter(points.no >= min.points.per.sample) %>%
+  mutate(major.rate.median=median(major.rate)) %>%
+  mutate(major.rate.mean=mean(major.rate)) %>%
+  mutate(sd=sd(major.rate)) %>%
+  ungroup() %>%
+  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
+  mutate(ploidy.class=case_when(Ploidy < 2.5 & GenomeDoublings==0 ~ 'Diploid', Ploidy >= 2.5 | GenomeDoublings > 0 ~ 'Polyploid')) %>%
   filter(!is.na(ploidy.class)) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid'))) %>%
   mutate(tcga_code=factor(.$tcga_code, levels=.$tcga_code %>% unique() %>% sort())) %>%
-  mutate(lineage=factor(.$lineage, levels=.$lineage %>% unique() %>% sort())) %>%
-  filter(lowBaseQ.rate < lowBaseQ.threshold) %>%
-  filter(gene.type=='Inactive') %>%
-  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
-  group_by(DepMapID, sex, karyo.class, ploidy.class, tcga_code, Released.to.SRA) %>%
-  summarize(major.rate.median=median(major.rate), points.per.sample=n(), sd=unique(sd)) %>%
-  ungroup() %>%
-  filter(points.per.sample >= min.points.per.sample) %>%
-  mutate(XCI=case_when(karyo.class=='No.Alt' & major.rate.median < 0.9 ~ 'Dysregulated', TRUE ~ 'Normal')) %>%
-  mutate(XCI=factor(.$XCI, levels=c('Normal', 'Dysregulated')))
-
-g <- ggplot(ase.chrx.annot.major.rate.summary2, aes(x=karyo.class, y=major.rate.median)) +
-  geom_violin(aes(col=ploidy.class), position='dodge', show.legend=FALSE) +
-  # geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge2(0.75, preserve='single')) +
-  geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge(0.9), width=0.2, fatten=3, show.legend=FALSE) +
-  geom_point(aes(col=ploidy.class, fill=sd, size=points.per.sample), shape=21, position=position_jitterdodge(), alpha=0.75) +
-  scale_fill_gradient2(low='limegreen', mid='white', high='red', midpoint=0.1) +
-  ylim(0.5, 1) +
-  facet_wrap(~tcga_code, nrow=5, drop=F) +
-  labs(title=paste0('Female, Inactive genes, LowBaseQualityCutoff=', lowBaseQ.threshold, ', At least ', min.points.per.sample, ' points/sample')) +
-  guides(size=guide_legend(order=1), color=guide_legend(order=2), fill=guide_colorbar(order=3)) +
-  theme_bw(base_size=20) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('output/21_ASEReadCounter', 'ASE_chrX_TumorTypesSeparated.png'), dpi=100, width=28, height=20)
-
-g <- ggplot(ase.chrx.annot.major.rate.summary2 %>% filter(Released.to.SRA==TRUE), aes(x=karyo.class, y=major.rate.median)) +
-  geom_violin(aes(col=ploidy.class), position='dodge', show.legend=FALSE) +
-  # geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge2(0.75, preserve='single')) +
-  geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge(0.9), width=0.2, fatten=3, show.legend=FALSE) +
-  geom_point(aes(col=ploidy.class, fill=tcga_code, size=points.per.sample), shape=21, position=position_jitterdodge(), alpha=0.75) +
-  # scale_fill_gradient2(low='limegreen', mid='white', high='red', midpoint=0.1) +
-  ylim(0.5, 1) +
-  labs(title=paste0('Female, Inactive genes, LowBaseQualityCutoff=', lowBaseQ.threshold, ', At least ', min.points.per.sample, ' points/sample')) +
-  guides(size=guide_legend(order=1), color=guide_legend(order=2), fill=guide_legend(order=3, ncol=2)) +
-  theme_bw(base_size=20) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('output/21_ASEReadCounter', 'ASE_chrX_TumorTypesMerged.png'), dpi=100, width=12, height=7)
-
-
-ase.chrx.annot.l <- ase.chrx.annot %>%
-  mutate(lowMapQ.rate=lowMAPQDepth/rawDepth) %>%
-  mutate(lowBaseQ.rate=lowBaseQDepth/rawDepth) %>%
-  mutate(ref=refCount/totalCount) %>%
-  mutate(alt=altCount/totalCount) %>%
-  pivot_longer(names_to='ref.alt', values_to='rate', cols=c(ref, alt)) %>%
-  as.data.frame()
-
-sample.of.interest <- 'ACH.000173'
-sample.of.interest <- 'ACH.000020'
-sample.of.interest <- 'ACH.000129'
-sample.of.interest <- 'ACH.000205'
-sample.of.interest <- 'ACH.000281'
-sample.of.interest <- 'ACH.000630'
-sample.of.interest <- 'ACH.000640'
-sample.of.interest <- 'ACH.000808'
-sample.of.interest <- 'ACH.000876'
-
-g <- ggplot(ase.chrx.annot.l %>% filter(DepMapID==sample.of.interest), aes(x=position, y=rate)) +
-  geom_point(aes(size=totalCount, fill=lowBaseQ.rate, shape=exon.intron), col='white') +
-  geom_hline(yintercept=0.5, col='darkgray', linetype='dashed') +
-  ggrepel::geom_label_repel(data=. %>% filter(Gene_name=='XIST'), aes(label=Gene_name), size=5, box.padding=1, max.overlaps=Inf, show.legend=FALSE) +
-  facet_wrap(~gene.type, ncol=1) +
-  scale_shape_manual(values=list('Exon'=21, 'Intron'=24)) +
-  scale_x_continuous(breaks=seq(0, 155270560, 50*1e6), labels=paste0(seq(0, 150, 50), 'Mb')) +
-  labs(title=sample.of.interest, x='Position on chrX', y='Rate', size='#Total read') +
-  guides(shape=guide_legend(override.aes=list(shape=1, col='black', size=3), order=1), size=guide_legend(override.aes=list(shape=1, col='black'), order=2), fill=guide_colorbar(order=3)) +
-  theme_bw(base_size=20)
-ggsave(g, file=here('output/21_ASEReadCounter', paste0('ASE_chrX_alongWithLoci_', sample.of.interest, '.png')), dpi=100, width=10, height=6)
-
-
-## Autosomes
-ase.auto.annot <- ase.df %>%
-  filter(!contig %in% c('chrX', 'chrY')) %>%
-  left_join(exon.positions.df, by=c('contig', 'position'='POS')) %>%
-  left_join(sample.amp.del %>% mutate(contig=paste0('chr', chr)), by=c('DepMapID', 'contig')) %>%
-  mutate(Released.to.SRA=case_when(DepMapID %in% sample.with.wes.depmapid ~ TRUE, TRUE ~ FALSE)) %>%
-  as.data.frame()
-saveRDS(ase.auto.annot, file=here('output/21_ASEReadCounter', 'ase.auto.annot.RData'), compress=FALSE)
-# ase.auto.annot <- readRDS(file=here('output/21_ASEReadCounter', 'ase.auto.annot.RData'))
-
-ase.auto.annot.major.rate <- ase.auto.annot %>%
-  mutate(lowMapQ.rate=lowMAPQDepth/rawDepth) %>%
-  mutate(lowBaseQ.rate=lowBaseQDepth/rawDepth) %>%
-  mutate(ref=refCount/totalCount) %>%
-  mutate(alt=altCount/totalCount) %>%
-  mutate(major.rate=case_when(ref > alt ~ ref, ref < alt ~ alt, ref==alt ~ ref))
-
-ase.auto.annot.major.rate.summary <- ase.auto.annot.major.rate %>%
-  filter(exon.intron=='Exon') %>%
-  mutate(ploidy.class=case_when(Ploidy < 2.5 & GenomeDoublings==0 ~ 'Diploid', Ploidy >= 2.5 | GenomeDoublings > 0 ~ 'Polyploid')) %>%
-  group_by(DepMapID) %>%
-  mutate(major.rate.median=median(major.rate)) %>%
-  mutate(sd=sd(major.rate)) %>%
-  mutate(points.no=n()) %>%
+  mutate(OncotreeLineage=factor(.$OncotreeLineage, levels=.$OncotreeLineage %>% unique() %>% sort())) %>%
+  group_by(ModelID, karyo.class, ploidy.class, tcga_code, OncotreeLineage) %>%
+  summarize(major.rate.median=unique(major.rate.median), major.rate.mean=unique(major.rate.mean), points.per.sample=n(), sd=unique(sd)) %>%
   ungroup()
 
-ase.auto.annot.major.rate.summary2 <- ase.auto.annot.major.rate.summary %>%
-  mutate(contig=factor(.$contig, levels=.$contig %>% unique() %>% gtools::mixedsort())) %>%
-  filter(!is.na(ploidy.class)) %>%
-  mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid'))) %>%
-  filter(lowBaseQ.rate < lowBaseQ.threshold) %>%
-  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
-  group_by(DepMapID, sex, contig, karyo.class, ploidy.class, tcga_code, Released.to.SRA) %>%
-  summarize(major.rate.median=median(major.rate), points.per.sample=n()) %>%
-  ungroup() %>%
-  filter(points.per.sample >= min.points.per.sample)
+## No CNAs/Whole amp vs ASE value (tumor types merged)
+stat.test.uni <- ase.chrx.annot.major.rate.female %>%
+  rstatix::wilcox_test(major.rate.median ~ karyo.class)
 
-tcga.code <- 'GBM'
-g <- ggplot(ase.auto.annot.major.rate.summary2 %>% filter(Released.to.SRA==TRUE & tcga_code==tcga.code), aes(x=karyo.class, y=major.rate.median)) +
-  geom_violin(aes(col=ploidy.class), position='dodge', show.legend=FALSE) +
-  # geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge2(0.75, preserve='single')) +
-  geom_boxplot(aes(col=ploidy.class), outlier.shape=NA, position=position_dodge(0.9), width=0.2, fatten=3, show.legend=FALSE) +
-  geom_point(aes(col=ploidy.class, shape=sex), position=position_jitterdodge(), alpha=0.75) +
-  # scale_fill_gradient2(low='limegreen', mid='white', high='red', midpoint=0.1) +
-  facet_wrap(~ contig, nrow=4, drop=FALSE) +
-  ylim(0.5, 1) +
-  labs(title=tcga.code) +
-  guides(size=guide_legend(order=1), color=guide_legend(order=2), fill=guide_legend(order=3, ncol=2)) +
-  theme_bw(base_size=20) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('output/21_ASEReadCounter', paste0('ASE_auto_', tcga.code, '.png')), dpi=100, width=12, height=7)
+stat.test.sep <- ase.chrx.annot.major.rate.female %>%
+  group_by(ploidy.class) %>%
+  rstatix::wilcox_test(major.rate.median ~ karyo.class)
+
+stat.test.ploidy <- ase.chrx.annot.major.rate.female %>%
+  group_by(karyo.class) %>%
+  rstatix::wilcox_test(major.rate.median ~ ploidy.class)
+
+g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.median)) +
+  geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
+  geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(0.5), alpha=0.5) +
+  scale_x_discrete(labels=c('No CNAs', 'Amp')) +
+  scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
+  scale_fill_discrete(name='Tumor type') +
+  coord_cartesian(ylim=c(0.5, 1), clip='off') +
+  ggpubr::stat_pvalue_manual(stat.test.uni %>% rstatix::add_xy_position(x='karyo.class'), y.position=1.18, tip.length=0.1, label='P = {p}', col='black', size=5, show.legend=FALSE) +
+  ggpubr::stat_pvalue_manual(stat.test.sep %>% rstatix::add_xy_position(x='karyo.class', group='ploidy.class'), y.position=1.05, step.increase=0.3, tip.length=0.1, label='P = {p}', col='ploidy.class', size=5, show.legend=FALSE) +
+  labs(y='ASE value', col='Ploidy') +
+  guides(col=guide_legend(override.aes=list(alpha=1))) +
+  theme_classic(base_size=20) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.title.x=element_blank()) +
+  theme(plot.margin=margin(5,1,2,1, unit='cm'))
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig5f.png'), dpi=100, width=9, height=7)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig5f.pdf'), width=9, height=7, useDingbats=TRUE)
