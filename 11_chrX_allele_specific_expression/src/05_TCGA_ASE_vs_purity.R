@@ -21,11 +21,13 @@ ase.chrx.annot.major.rate.female.purity <- ase.chrx.annot.major.rate.female %>%
   left_join(absolute %>% select(SampleID, purity), by='SampleID')
 
 g <- ggplot(ase.chrx.annot.major.rate.female.purity, aes(x=purity, y=major.rate.median)) +
-  geom_point(aes(col=ploidy.class)) +
+  geom_point(aes(col=ploidy.class), shape=21, alpha=0.5) +
   geom_smooth(aes(col=ploidy.class), method='lm') +
-  lims(x=c(0, 1), y=c(0.5, 1)) +
-  coord_fixed() +
+  lims(y=c(0.5, 1)) +
+  scale_x_continuous(limits=c(0, 1), breaks=c(0, 0.5, 1)) +
+  coord_fixed(ratio=1.5) +
   lemon::facet_rep_wrap(~karyo.class, nrow=1, repeat.tick.labels=TRUE) +
+  labs(y='ASE value', col='Ploidy') +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
@@ -34,12 +36,7 @@ g <- ggplot(ase.chrx.annot.major.rate.female.purity, aes(x=purity, y=major.rate.
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.png'), dpi=100, width=10, height=5)
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.pdf'), width=10, height=5, useDingbats=TRUE)
 
-reg.wt <- lm(major.rate.mean ~ purity, data=ase.chrx.annot.major.rate.summary3 %>% filter(karyo.class=='WT'))
-reg.amp <- lm(major.rate.mean ~ purity, data=ase.chrx.annot.major.rate.summary3 %>% filter(karyo.class=='Whole.Amp'))
-summary(reg.wt)
-summary(reg.amp)
-
-reg <- ase.chrx.annot.major.rate.summary3 %>%
+reg <- ase.chrx.annot.major.rate.female.purity %>%
   group_by(karyo.class, ploidy.class) %>%
   nest() %>%
   mutate(model=map(data, ~lm(major.rate.mean ~ purity, data=.)),
@@ -47,23 +44,51 @@ reg <- ase.chrx.annot.major.rate.summary3 %>%
           slope=map_dbl(model, ~signif(summary(.)$coef[2,1]))) %>%
   select(karyo.class, ploidy.class, intercept, slope)
 
-ase.chrx.annot.major.rate.summary4 <- ase.chrx.annot.major.rate.summary3 %>%
+ase.chrx.annot.major.rate.diff <- ase.chrx.annot.major.rate.female.purity %>%
   left_join(reg, by=c('karyo.class', 'ploidy.class')) %>%
   # mutate(intercept=0.5, slope=0.5) %>%
-  mutate(predicted.ase.value=intercept + slope * purity) %>%
-  mutate(diff=major.rate.mean - predicted.ase.value) %>%
-  filter(karyo.class=='WT') %>%
+  mutate(expected.ase.value=intercept + slope * purity) %>%
+  mutate(diff=expected.ase.value - major.rate.mean) %>%
+  filter(karyo.class=='No.Alt') %>%
   group_by(project, ploidy.class) %>%
   mutate(diff.median=median(diff), n=n()) %>%
   ungroup() %>%
-  arrange(ploidy.class, diff.median) %>%
+  arrange(ploidy.class, desc(diff.median)) %>%
   mutate(project=factor(.$project, levels=.$project %>% unique()))
 
-g <- ggplot(ase.chrx.annot.major.rate.summary4, aes(x=project, y=diff)) +
-  # geom_violin() +
-  geom_boxplot(aes(fill=ploidy.class), outlier.shape=NA) +
-  # facet_grid(ploidy.class ~ karyo.class) +
-  theme_bw(base_size=20) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
-ggsave(g, file=here('output/FiguresForPaper', 'Purity_corrected_ASE_value.png'), dpi=100, width=18, height=8)
+one.sample.t.test <- ase.chrx.annot.major.rate.diff %>%
+  filter(n >= 2) %>%
+  group_by(karyo.class, ploidy.class, project) %>%
+  nest() %>%
+  mutate(t_test=map(data, ~t.test(.x$diff, mu=0))) %>%
+  mutate(param=map(t_test, broom::tidy)) %>%
+  unnest(param) %>%
+  mutate(q.val=p.adjust(p.value, method='bonferroni'))
 
+one.sample.t.test <- ase.chrx.annot.major.rate.diff %>%
+  filter(n >= 2) %>%
+  group_by(karyo.class, project, ploidy.class) %>%
+  rstatix::t_test(diff ~ 1, mu=0, alternative='greater') %>%
+  rstatix::adjust_pvalue(method = "bonferroni") %>%
+  rstatix::add_significance() %>%
+  rstatix::add_xy_position(x='project') %>%
+  mutate(xmin=case_when(ploidy.class=='Diploid' ~ xmin - 0.2, TRUE ~ xmin + 0.2)) %>%
+  mutate(xmax=case_when(ploidy.class=='Diploid' ~ xmax - 0.2, TRUE ~ xmax + 0.2))
+
+g <- ggplot(ase.chrx.annot.major.rate.diff, aes(x=project, y=diff)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_boxplot(aes(fill=ploidy.class), position=position_dodge(0.8)) +
+  ggpubr::stat_pvalue_manual(one.sample.t.test, label='p.adj.signif', col='ploidy.class', size=5, hide.ns=TRUE, show.legend=FALSE) +
+  lims(y=c(-0.25, 0.25)) +
+  # facet_wrap(~ploidy.class) +
+  labs(y='Difference in allelic ratios\nfrom expected', fill='Ploidy') +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  theme(axis.title.x=element_blank())
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'Fig5g.png'), dpi=100, width=18, height=6)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'Fig5g.pdf'), width=18, height=6, useDingbats=TRUE)
+
+female.inactive.cn1to2 <- t.test(lm.df.l %>% filter(Gender=='Female' & type=='Inactive genes' & cn=='1 < CN < 2') %>% pull(slope), mu=0)

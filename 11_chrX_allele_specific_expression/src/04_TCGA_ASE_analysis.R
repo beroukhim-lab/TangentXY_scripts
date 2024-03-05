@@ -110,7 +110,7 @@ stat.test.ploidy <- ase.chrx.annot.major.rate.female %>%
 
 g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
-  geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(0.5), alpha=0.5) +
+  geom_point(aes(col=ploidy.class), size=3, shape=21, alpha=0.5, position=position_jitterdodge(0.5)) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
   scale_fill_discrete(name='Tumor type') +
