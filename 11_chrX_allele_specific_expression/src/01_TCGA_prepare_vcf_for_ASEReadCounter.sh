@@ -41,3 +41,4 @@ bam="/xchip/beroukhimlab/kei/project/Tangent/20230130_ASEReadCounter/data/bam/9f
 
 bcftools view -Oz -s $sample_id -o $out_dir/$sample_id"_Biallelic_SNPs.vcf.gz" $out_dir/"PCA.r1.TCGAbarcode.merge.tnSwapCorrected.10389_Biallelic_SNPs.bcf"
 bcftools index -t $out_dir/$sample_id"_Biallelic_SNPs.vcf.gz"
+

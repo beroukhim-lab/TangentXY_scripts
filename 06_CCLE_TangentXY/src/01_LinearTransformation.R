@@ -104,3 +104,4 @@ g <- ggplot(signal.x.lt, aes(x=signal, group=ModelID)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalSamples_ChrX_transformedSignalDistribution.png'), dpi=100, width=8, height=8)
+

@@ -295,3 +295,4 @@ g <- ggplot(sample.amp.del.chry, aes(x=ploidy.class.total, y=fraction)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4b.png'), dpi=100, width=6, height=6)
 ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4b.pdf'), width=6, height=6)
+

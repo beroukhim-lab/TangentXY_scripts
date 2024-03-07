@@ -88,3 +88,4 @@ g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.png'), dpi=100, width=10, height=5)
 ggsave(g, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'Fig1a.pdf'), width=10, height=5, useDingbats=TRUE)
+

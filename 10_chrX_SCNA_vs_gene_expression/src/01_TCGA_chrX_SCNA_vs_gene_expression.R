@@ -693,3 +693,4 @@ one.sample.t.test.table.auto <- data.frame(Gender=c('female', 'female', 'male', 
 lm.df.l.auto %>%
   group_by(Gender, cn) %>%
   summarize(n=n(), slope.median=median(slope), slope.mean=mean(slope))
+

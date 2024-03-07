@@ -401,3 +401,4 @@ g <- ggsurvfit(surv.pfs.uvm.chrY.del) +
 ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4b.png'), dpi=100, width=6, height=6)
 ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4b.pdf'), width=6, height=6)
 
+

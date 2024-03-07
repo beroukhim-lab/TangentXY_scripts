@@ -175,3 +175,4 @@ tumors.male <- sif %>%
   pull(SampleID)
 
 save(normals.female, normals.male, tumors.female, tumors.male, file=here('04_TCGA_Tangent_vs_TangentXY/output/01_sample_selection', 'samples.list.RData'))
+

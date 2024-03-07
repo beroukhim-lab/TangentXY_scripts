@@ -130,3 +130,4 @@ results7 <- results6 %>%
 exome.capture.kit.hg38.data <- results7 %>%
   select(Chr, Start, Stop, Par, Masked, freqcnv, length, centromerStart, centromerEnd, centromerLength, centromerCenter, Arm, Arm2)
 write.table(exome.capture.kit.hg38.data, file=here('05_CCLE_data_preparation/output/01_lifgOver_Hg19_to_GRCh38', 'exomeAgilentCaptureKit_GRCh38_data.txt'), sep='\t', row.names=FALSE, col.names=TRUE, quote=FALSE)
+

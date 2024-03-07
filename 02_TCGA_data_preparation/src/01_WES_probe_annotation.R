@@ -42,3 +42,4 @@ pos.annotated <- pos %>%
                         Start > centromerEnd ~ 'q')) %>%
   mutate(chrom=paste0('chr', Chr))
 saveRDS(pos.annotated, file=here('02_TCGA_data_preparation/output/01_WES_probe_annotation', 'probes.hg19.annotated.rds'), compress=FALSE)
+

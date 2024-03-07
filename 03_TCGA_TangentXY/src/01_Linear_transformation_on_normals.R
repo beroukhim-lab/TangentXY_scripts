@@ -128,3 +128,4 @@ g <- ggplot(signal.x.lt, aes(x=signal, group=SampleID)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.pdf'), width=8, height=8)
+
