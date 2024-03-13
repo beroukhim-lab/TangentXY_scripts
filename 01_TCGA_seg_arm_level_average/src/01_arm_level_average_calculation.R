@@ -80,7 +80,7 @@ g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
   geom_boxplot() +
   scale_y_continuous(breaks=seq(-5, 3, by=1)) +
   lemon::facet_rep_wrap(~gender, nrow=1, labeller=as_labeller(c('female'='Female', 'male'='Male')), repeat.tick.labels=TRUE) +
-  labs(y=expression(paste({log[2]}, '[Relative CN]', sep='')), title=expression(paste('Arm level average ', {log[2]}, '[Relative CN]'))) +
+  labs(y=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title=expression(paste('Arm level average ', {log[2]}, '[Relative copy-number]'))) +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +

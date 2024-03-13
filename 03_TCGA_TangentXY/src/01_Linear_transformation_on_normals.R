@@ -33,11 +33,11 @@ signal.x <- doc.n[grepl('X', rownames(doc.n)), ] %>%
 saveRDS(signal.x, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'signal.x.rds'), compress=FALSE)
 
 g <- ggplot(signal.x, aes(x=signal, group=SampleID)) +
-  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300, dev='ragg_png') +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
-  coord_flip() +
-  labs(x=expression(paste({log[2]}, '[Relative copy number]', sep='')), title='ChrX signal (Before transformation)') +
+  coord_flip(xlim=c(NA, 8.3)) +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrX signal (Before transformation)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
@@ -52,11 +52,11 @@ signal.y <- doc.n[grepl('Y', rownames(doc.n)), ] %>%
 saveRDS(signal.y, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'signal.y.rds'), compress=FALSE)
 
 g <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
-  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300, dev='ragg_png') +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
-  coord_flip() +
-  labs(x=expression(paste({log[2]}, '[Relative copy number]', sep='')), title='ChrY signal') +
+  coord_flip(xlim=c(NA, 8.3)) +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrY signal') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
@@ -117,11 +117,11 @@ signal.x.lt <- doc.n.transformed[grepl('X', rownames(doc.n.transformed)),] %>%
   left_join(sif, by='SampleID')
 
 g <- ggplot(signal.x.lt, aes(x=signal, group=SampleID)) +
-  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300, dev='ragg_png') +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
-  coord_flip() +
-  labs(x=expression(paste({log[2]}, '[Relative copy number]', sep='')), title='ChrX signal (After transformation)') +
+  coord_flip(xlim=c(NA, 8.3)) +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrX signal (After transformation)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +

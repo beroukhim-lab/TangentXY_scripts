@@ -113,7 +113,7 @@ g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.me
   geom_point(aes(col=ploidy.class), size=3, shape=21, alpha=0.5, position=position_jitterdodge(0.5)) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
-  scale_fill_discrete(name='Tumor type') +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1), clip='off') +
   ggpubr::stat_pvalue_manual(stat.test.uni %>% rstatix::add_xy_position(x='karyo.class'), y.position=1.18, label='P = {p}', col='black', size=5, show.legend=FALSE) +
   ggpubr::stat_pvalue_manual(stat.test.sep %>% rstatix::add_xy_position(x='karyo.class', group='ploidy.class'), y.position=1.05, step.increase=0.1, label='P = {p}', col='ploidy.class', size=5, show.legend=FALSE) +
@@ -144,6 +144,7 @@ g <- ggplot(object.for.plot, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(), alpha=0.75) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1)) +
   lemon::facet_rep_wrap(~project, nrow=5, drop=F, repeat.tick.labels=TRUE) +
   labs(y='ASE value', col='Ploidy', title='ChrX') +
@@ -153,8 +154,8 @@ g <- ggplot(object.for.plot, aes(x=karyo.class, y=major.rate.median)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.png'), dpi=100, width=20, height=14)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.pdf'), width=20, height=14, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8a.png'), dpi=100, width=20, height=14)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8a.pdf'), width=20, height=14, useDingbats=TRUE)
 
 
 
@@ -230,6 +231,7 @@ g <- ggplot(object.for.plot.auto, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class, shape=Gender), size=3, position=position_jitterdodge(), alpha=0.5) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   scale_shape_manual(values=c('Female'=21, 'Male'=24)) +
   coord_cartesian(ylim=c(0.5, 1)) +
   lemon::facet_rep_wrap(~contig, nrow=4, drop=F, repeat.tick.labels=TRUE) +
@@ -240,5 +242,5 @@ g <- ggplot(object.for.plot.auto, aes(x=karyo.class, y=major.rate.median)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.png'), dpi=100, width=20, height=14)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.pdf'), width=20, height=14, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8b.png'), dpi=100, width=20, height=14)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8b.pdf'), width=20, height=14, useDingbats=TRUE)

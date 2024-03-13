@@ -201,7 +201,7 @@ g <- ggplot(sample.amp.del.count %>%
       mutate(project=factor(.$project, levels=chrx.project.order)),
     aes(x=Gender.n, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity', position='fill') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='red', 'Arm.Amp'='pink', 'Amp.Del'='purple', 'Arm.Del'='cyan', 'Whole.Del'='blue')) +
+  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   facet_wrap(~project, nrow=1, scales='free_x', strip.position='bottom') +
   labs(title='ChrX', y='Fraction of patients', fill='Alteration type') +
@@ -231,7 +231,7 @@ sample.amp.del.chrx <- sample.amp.del %>%
 
 g <- ggplot(sample.amp.del.chrx, aes(x=ploidy.class.total, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='red', 'Arm.Amp'='pink', 'Amp.Del'='purple', 'Arm.Del'='cyan', 'Whole.Del'='blue')) +
+  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1.0), breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   lemon::facet_rep_wrap(~Gender, nrow=1, scales='free_x', repeat.tick.labels=TRUE) +
   labs(title='ChrX', y='Fraction of patients', fill='Alteration type') +
@@ -256,7 +256,7 @@ g <- ggplot(sample.amp.del.count %>%
       mutate(project=factor(.$project, levels=chry.project.order)),
     aes(x=project.n, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity', position='fill') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='red', 'Arm.Amp'='pink', 'Amp.Del'='purple', 'Arm.Del'='cyan', 'Whole.Del'='blue')) +
+  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   facet_wrap(~project, nrow=1, scales='free_x', strip.position='bottom') +
   labs(title='ChrY', y='Fraction of patients', fill='Alteration type') +
@@ -285,7 +285,7 @@ sample.amp.del.chry <- sample.amp.del %>%
 
 g <- ggplot(sample.amp.del.chry, aes(x=ploidy.class.total, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='red', 'Arm.Amp'='pink', 'Amp.Del'='purple', 'Arm.Del'='cyan', 'Whole.Del'='blue')) +
+  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1.0), breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   lemon::facet_rep_wrap(~Gender, nrow=1, scales='free_x', repeat.tick.labels=TRUE) +
   labs(title='ChrY', y='Fraction of patients', fill='Alteration type') +

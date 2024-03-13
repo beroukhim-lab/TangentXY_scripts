@@ -25,6 +25,7 @@ g <- ggplot(ase.chrx.annot.major.rate.female.purity, aes(x=purity, y=major.rate.
   geom_smooth(aes(col=ploidy.class), method='lm') +
   lims(y=c(0.5, 1)) +
   scale_x_continuous(limits=c(0, 1), breaks=c(0, 0.5, 1)) +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_fixed(ratio=1.5) +
   lemon::facet_rep_wrap(~karyo.class, nrow=1, repeat.tick.labels=TRUE) +
   labs(y='ASE value', col='Ploidy') +
@@ -33,8 +34,8 @@ g <- ggplot(ase.chrx.annot.major.rate.female.purity, aes(x=purity, y=major.rate.
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.png'), dpi=100, width=10, height=5)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.pdf'), width=10, height=5, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS9.png'), dpi=100, width=10, height=5)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS9.pdf'), width=10, height=5, useDingbats=TRUE)
 
 reg <- ase.chrx.annot.major.rate.female.purity %>%
   group_by(karyo.class, ploidy.class) %>%
@@ -79,8 +80,9 @@ g <- ggplot(ase.chrx.annot.major.rate.diff, aes(x=project, y=diff)) +
   geom_hline(yintercept=0, linetype='dashed') +
   geom_boxplot(aes(fill=ploidy.class), position=position_dodge(0.8)) +
   ggpubr::stat_pvalue_manual(one.sample.t.test, label='p.adj.signif', col='ploidy.class', size=5, hide.ns=TRUE, show.legend=FALSE) +
+  scale_fill_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   lims(y=c(-0.25, 0.25)) +
-  # facet_wrap(~ploidy.class) +
   labs(y='Difference in allelic ratios\nfrom expected', fill='Ploidy') +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +

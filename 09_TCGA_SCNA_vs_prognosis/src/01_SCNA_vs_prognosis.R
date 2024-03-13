@@ -364,8 +364,8 @@ survdiff.pfs.ov.chrX.del <- survdiff(Surv(PFS.time, PFS) ~ if.alt, data=cli.kary
 g <- ggsurvfit(surv.pfs.ov.chrX.del) +
   add_censor_mark() +
   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.ov.chrX.del$pvalue, digit=3))), size=5, hjust=1, y=1) +
-  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
   labs(title='OV ~ ChrX deletion', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +
@@ -389,8 +389,8 @@ survdiff.pfs.uvm.chrY.del <- survdiff(Surv(PFS.time, PFS) ~ if.alt, data=cli.kar
 g <- ggsurvfit(surv.pfs.uvm.chrY.del) +
   add_censor_mark() +
   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.uvm.chrY.del$pvalue, digit=3))), size=5, hjust=1, y=1) +
-  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
   labs(title='UVM ~ ChrY deletion', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +

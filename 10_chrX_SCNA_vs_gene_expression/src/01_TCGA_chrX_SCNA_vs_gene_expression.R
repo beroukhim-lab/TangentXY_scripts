@@ -6,7 +6,7 @@ sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
 ## Ploidy
 polyploidy.threshold <- 2.5
 
-absolute.file <- here('07_TCGA_SCNAs_in_chrX_and_chrY/data', 'TCGA_mastercalls.abs_tables_JSedit.fixed.txt')
+absolute.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'TCGA_mastercalls.abs_tables_JSedit.fixed.txt')
 absolute <- read.delim(absolute.file) %>%
   rename(barcode=sample) %>%
   separate(col=array, into=c('project', 'tss', 'participant', 'sample'), sep='-') %>%
@@ -673,8 +673,8 @@ g <- ggplot(lm.df.l.auto, aes(x=cn, y=slope)) +
   theme(strip.placement='outside') +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5))
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS6a.png'), dpi=100, width=5, height=8)
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS6a.pdf'), width=5, height=8, useDingbats=TRUE)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS7a.png'), dpi=100, width=5, height=8)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS7a.pdf'), width=5, height=8, useDingbats=TRUE)
 
 ## Perform one sample T-test to see if average of slopes is significantly different from 1
 female.autosome.cn1to2 <- t.test(lm.df.l.auto %>% filter(Gender=='Female' & cn=='1 < CN < 2') %>% pull(slope), mu=1)

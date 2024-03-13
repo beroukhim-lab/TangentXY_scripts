@@ -52,11 +52,12 @@ g <- ggplot(chrX.signal.median %>% filter(Gender!='NA'), aes(x=median.signal, gr
   scale_y_continuous(breaks=c(0, 10, 20)) +
   coord_flip() +
   lemon::facet_rep_wrap(~dimension, nrow=1, labeller=as_labeller(dimensions.labels), repeat.tick.labels=TRUE) +
-  labs(x=expression(paste('Median of ', {log[2]}, '[Relative CN]', sep='')), y='Density') +
+  labs(x=expression(atop('Median of', paste({log[2]}, '[Relative copy-number]', sep=''))), y='Density') +
+  # labs(x=expression(paste0('Median of ', '\n', {log[2]}, '[Relative copy-number]')), y='Density') +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'Fig2a.png'), dpi=100, width=22, height=4)
-ggsave(g, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'Fig2a.pdf'), width=22, height=4)
+ggsave(g, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'Fig2a.png'), dpi=100, width=22, height=5)
+ggsave(g, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'Fig2a.pdf'), width=22, height=5)

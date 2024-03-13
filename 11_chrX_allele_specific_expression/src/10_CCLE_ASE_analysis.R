@@ -130,7 +130,7 @@ g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.me
   geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(0.5), alpha=0.5) +
   scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
-  scale_fill_discrete(name='Tumor type') +
+  scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1), clip='off') +
   ggpubr::stat_pvalue_manual(stat.test.uni %>% rstatix::add_xy_position(x='karyo.class'), y.position=1.18, tip.length=0.1, label='P = {p}', col='black', size=5, show.legend=FALSE) +
   ggpubr::stat_pvalue_manual(stat.test.sep %>% rstatix::add_xy_position(x='karyo.class', group='ploidy.class'), y.position=1.05, step.increase=0.3, tip.length=0.1, label='P = {p}', col='ploidy.class', size=5, show.legend=FALSE) +

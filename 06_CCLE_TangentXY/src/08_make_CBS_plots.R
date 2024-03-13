@@ -1,8 +1,6 @@
 library(tidyverse)
 library(here)
 
-library(DNAcopy)
-
 sif <- read.csv(here('05_CCLE_data_preparation/output/02_sample_annotation', 'SampleInfo.csv'), na.strings='') %>%
   mutate(ModelID=gsub('-', '.', ModelID))
 
@@ -30,7 +28,7 @@ male.samples <- c('ACH.000130', 'ACH.000065', 'ACH.000156', 'ACH.000158', 'ACH.0
 samples <- c(female.samples, male.samples)
 karyotypes <- c('<2n>X, -X', '<2n>XX', '<2n>X, -X', '<3n>XXX', '<3n>XX, -X', '<2n>XY', '<2n>XY', '<2n>X, -Y', '<3n>XXYY', '<4n>XX, -Y, -Y', '<2n>X, -Y')
 
-ggplotSample <- function(sample.id) {
+ggplotCBS <- function(sample.id) {
   gender <- sif %>%
     filter(ModelID==sample.id) %>%
     pull(Sex)
@@ -46,7 +44,7 @@ ggplotSample <- function(sample.id) {
     filter(ModelID==sample.id) %>%
     pull(OncotreePrimaryDisease)
 
-  title <- paste0(sub('\\.', '-', sample.id), ', ', cell.line.name, ' (', primary.disease, ')\n', 'Ploidy & karyotype: ', karyotype)
+  title <- paste0(sub('\\.', '-', sample.id), ', ', cell.line.name, ' (', gender, ', ', primary.disease, ')\n', 'Ploidy & karyotype: ', karyotype)
 
   ## Prototype Tangent
   points.pr <- segment.smoothed.CNA.obj.pr$data[[sample.id]] %>%
@@ -54,7 +52,8 @@ ggplotSample <- function(sample.id) {
     setNames('log2rcn') %>%
     mutate(loci=row_number()) %>%
     bind_cols(probes) %>%
-    mutate(chr.class=case_when(chr %in% paste0('chr', c(seq(1, 21, 2), 'X')) ~ 'odd', TRUE ~ 'even'))
+    mutate(chr.class=case_when(chr %in% paste0('chr', c(seq(1, 21, 2), 'X')) ~ 'odd', TRUE ~ 'even')) %>%
+    mutate(chr.class.col=case_when(chr.class=='odd' ~ '#0CB702', TRUE ~ '#000000'))
 
   segments.pr <- segment.smoothed.CNA.obj.pr$output %>%
     filter(ID==sample.id) %>%
@@ -71,13 +70,14 @@ ggplotSample <- function(sample.id) {
     bind_rows(segments.pr %>% filter(chrom %in% c('chrX', 'chrY')) %>% mutate(start.loci=start.loci+500, end.loci=end.loci+500))
 
   g.pr <- ggplot(points.pr2, aes(x=loci, y=log2rcn)) +
-    geom_point(aes(col=chr.class), show.legend=FALSE) +
+    ggrastr::rasterize(geom_point(aes(col=chr.class), size=1, show.legend=FALSE), dpi=300, dev='ragg_png') +
     geom_hline(yintercept=0, col='gray', linetype='dashed', linewidth=1) +
     geom_hline(yintercept=-1, col='blue', linetype='dashed', linewidth=1) +
     geom_segment(data=segments.pr2, aes(x=start.loci, xend=end.loci, y=seg.mean, yend=seg.mean), col='red', linewidth=1.5) +
+    # ggrastr::rasterize(geom_segment(data=segments.pr2, aes(x=start.loci, xend=end.loci, y=seg.mean, yend=seg.mean), col='red', linewidth=1.5), dpi=300, dev='ragg_png') +
     scale_color_manual(values=c('odd'='limegreen', 'even'='black')) +
     coord_cartesian(ylim=c(-2.5, 2.5)) +
-    labs(title='Tangent', x='Genomic position', y=expression(paste({log[2]}, '[Relative CN]', sep=''))) +
+    labs(title='Tangent', x='Genomic position', y=expression(paste({log[2]}, '[Relative copy-number]', sep=''))) +
     theme_bw(base_size=20) +
     theme(panel.grid=element_blank()) +
     theme(axis.text.x=element_blank()) +
@@ -95,7 +95,8 @@ ggplotSample <- function(sample.id) {
     setNames('log2rcn') %>%
     mutate(loci=row_number()) %>%
     bind_cols(probes) %>%
-    mutate(chr.class=case_when(chr %in% paste0('chr', c(seq(1, 21, 2), 'X')) ~ 'odd', TRUE ~ 'even'))
+    mutate(chr.class=case_when(chr %in% paste0('chr', c(seq(1, 21, 2), 'X')) ~ 'odd', TRUE ~ 'even')) %>%
+    mutate(chr.class.col=case_when(chr.class=='odd' ~ '#0CB702', TRUE ~ '#000000'))
 
   segments.xy <- segment.smoothed.CNA.obj.xy$output %>%
     filter(ID==sample.id) %>%
@@ -112,10 +113,11 @@ ggplotSample <- function(sample.id) {
     bind_rows(segments.xy %>% filter(chrom %in% c('chrX', 'chrY')) %>% mutate(start.loci=start.loci+500, end.loci=end.loci+500))
 
   g.xy <- ggplot(points.xy2, aes(x=loci, y=log2rcn)) +
-    geom_point(aes(col=chr.class), show.legend=FALSE) +
+    ggrastr::rasterize(geom_point(aes(col=chr.class), size=1, show.legend=FALSE), dpi=300, dev='ragg_png') +
     geom_hline(yintercept=0, col='gray', linetype='dashed', linewidth=1) +
     geom_hline(yintercept=-1, col='blue', linetype='dashed', linewidth=1) +
     geom_segment(data=segments.xy2, aes(x=start.loci, xend=end.loci, y=seg.mean, yend=seg.mean), col='red', linewidth=1.5) +
+    # ggrastr::rasterize(geom_segment(data=segments.xy2, aes(x=start.loci, xend=end.loci, y=seg.mean, yend=seg.mean), col='red', linewidth=1.5), dpi=300, dev='ragg_png') +
     scale_color_manual(values=c('odd'='limegreen', 'even'='black')) +
     coord_cartesian(ylim=c(-2.5, 2.5)) +
     labs(title='TangentXY', x='Genomic position') +
@@ -133,11 +135,10 @@ ggplotSample <- function(sample.id) {
 
   g.title <- ggpubr::as_ggplot(ggpubr::text_grob(title, size=20))
   g.main <- ggpubr::ggarrange(g.pr, g.xy, nrow=1, align='hv')
-  # g <- ggpubr::annotate_figure(g.main, top=ggpubr::text_grob(title, hjust=0, size=30))
   g <- ggpubr::ggarrange(g.title, g.main, ncol=1, heights=c(1, 10))
 
-  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.pdf')), width=10, height=10, useDingbats=TRUE)
   ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.png')), bg='white', dpi=100, width=10, height=10)
+  ggsave(g, file=here('06_CCLE_TangentXY/output/08_make_CBS_plots', paste0(sample.id, '_', gender, '.pdf')), width=10, height=10, useDingbats=TRUE)
 }
 
-parallel::mclapply(samples, ggplotSample, mc.cores=parallel::detectCores() - 2)
+parallel::mclapply(samples, ggplotCBS, mc.cores=parallel::detectCores() - 2)
