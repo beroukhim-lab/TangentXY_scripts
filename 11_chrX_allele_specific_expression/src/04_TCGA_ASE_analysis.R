@@ -124,8 +124,8 @@ g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.me
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank()) +
   theme(plot.margin=margin(5,1,2,1, unit='cm'))
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'Fig5e.png'), dpi=100, width=9, height=7)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'Fig5e.pdf'), width=9, height=7, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'Fig4e.png'), dpi=100, width=9, height=7)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'Fig4e.pdf'), width=9, height=7, useDingbats=TRUE)
 
 
 ## No CNAs/Whole amp vs ASE value (tumor types separated)
@@ -154,8 +154,8 @@ g <- ggplot(object.for.plot, aes(x=karyo.class, y=major.rate.median)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8a.png'), dpi=100, width=20, height=14)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8a.pdf'), width=20, height=14, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.png'), dpi=100, width=20, height=14)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.pdf'), width=20, height=14, useDingbats=TRUE)
 
 
 
@@ -242,5 +242,5 @@ g <- ggplot(object.for.plot.auto, aes(x=karyo.class, y=major.rate.median)) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8b.png'), dpi=100, width=20, height=14)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS8b.pdf'), width=20, height=14, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.png'), dpi=100, width=20, height=14)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.pdf'), width=20, height=14, useDingbats=TRUE)

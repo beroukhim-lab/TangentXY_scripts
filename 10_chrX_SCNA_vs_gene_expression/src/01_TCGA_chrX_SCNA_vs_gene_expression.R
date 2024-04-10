@@ -60,12 +60,17 @@ tpm.df.l <- tpm.df %>%
   select(-ensid.ori) %>%
   pivot_longer(names_to='SampleID', values_to='tpm', cols=-c('ensid', 'gene.symbol', 'gene.type', 'egid', 'chr'))
 
+## Take a look at the TPM distribution to determine cutoff
 tpm.medians <- tpm.df.l %>%
   left_join(sif %>% select(SampleID, Gender), by='SampleID') %>%
   group_by(ensid, gene.symbol, gene.type, egid, chr, Gender) %>%
   summarize(median=median(tpm)) %>%
   ungroup() %>%
   mutate(log2median=log2(median + 1))
+
+g <- ggplot(tpm.medians, aes(x=Gender, y=log2median)) +
+  geom_violin()
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'log2TPMmedian_chrX.png'), dpi=100, width=8, height=8)
 
 tpm.threshold <- 1
 
@@ -148,8 +153,8 @@ reg.analysis <- function(df) {
                           RCN > 2^(female.standard + margin) ~ 'cn3',
                           TRUE ~ 'other')) %>%
       group_by(project) %>%
-      mutate(mean.exp.cn1=median(tpm[cn=='cn1'])) %>%
-      mutate(rel.exp=tpm/mean.exp.cn1) %>%
+      mutate(median.exp.cn1=median(tpm[cn=='cn1'])) %>%
+      mutate(rel.exp=tpm/median.exp.cn1) %>%
       filter(!is.na(rel.exp)) %>%
       filter(rel.exp < exp.outlier.threshold) %>%
       ungroup()
@@ -364,8 +369,8 @@ g <- ggplot(lm.df.l, aes(x=cn, y=slope)) +
   theme(strip.placement='outside') +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5))
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'Fig5b.png'), dpi=100, width=9, height=8)
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'Fig5b.pdf'), width=9, height=8, useDingbats=TRUE)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'Fig4b.png'), dpi=100, width=9, height=8)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'Fig4b.pdf'), width=9, height=8, useDingbats=TRUE)
 
 ## Perform one sample T-test to see if average of slopes is significantly different from 1
 female.inactive.cn1to2 <- t.test(lm.df.l %>% filter(Gender=='Female' & type=='Inactive genes' & cn=='1 < CN < 2') %>% pull(slope), mu=0)
@@ -396,17 +401,20 @@ tpm.df.l.auto <- tpm.df %>%
   pivot_longer(names_to='SampleID', values_to='tpm', cols=-c('ensid', 'gene.symbol', 'gene.type', 'egid', 'chr'))
 
 ensids.auto <- tpm.df.l.auto$ensid %>% unique()
+saveRDS(ensids.auto, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'ensids.auto.rds'), compress=FALSE)
+# ensids.auto <- readRDS(file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'ensids.auto.rds'))
 
 grch37 = biomaRt::useMart(biomart="ENSEMBL_MART_ENSEMBL", host="grch37.ensembl.org", path="/biomart/martservice", dataset="hsapiens_gene_ensembl")
 attr <- biomaRt::listAttributes(grch37)
 gene.pos <- biomaRt::getBM(attributes = c("ensembl_gene_id", "hgnc_symbol", "entrezgene_id", "chromosome_name", "start_position", "end_position"), filters = c("ensembl_gene_id"), values = list(ensids.auto), mart = grch37)
-# gene.pos <- readRDS(here('/xchip/beroukhimlab/kei/project/Tangent/20230117_AnalysisForPaper/output/20_6_4_correlationOfCNandExp', 'gene.pos.autosomes.rds'))
+saveRDS(gene.pos, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'gene.pos.rds'), compress=FALSE)
+# gene.pos <- readRDS(file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'gene.pos.rds'))
 
 gene.pos <- gene.pos %>%
   distinct(ensembl_gene_id, start_position, end_position, .keep_all=TRUE) %>%
   filter(!duplicated(ensembl_gene_id))
 
-## Take a look at the TPM distribution to decide cutoff
+## Take a look at the TPM distribution to determine cutoff
 tpm.medians.auto <- tpm.df.l.auto %>%
   left_join(sif %>% select(SampleID, Gender), by='SampleID') %>%
   mutate(chr=as.numeric(chr)) %>%
@@ -414,6 +422,11 @@ tpm.medians.auto <- tpm.df.l.auto %>%
   summarize(median=median(tpm)) %>%
   ungroup() %>%
   mutate(log2median=log2(median + 0.01))
+
+g <- ggplot(tpm.medians.auto, aes(x=Gender, y=log2median)) +
+  geom_violin() +
+  facet_wrap(~chr)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'log2TPMmedian_autosomes.png'), dpi=100, width=16, height=16)
 
 tpm.threshold <- 1
 
@@ -632,7 +645,7 @@ saveRDS(lm.df.auto.df, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA
 
 lm.df.l.auto <- lm.df.auto.df %>%
   filter(tpm.median > 1) %>%
-  mutate(type='Autosomal genes') %>%
+  mutate(type='Autosomal genes (TCGA)') %>%
   filter(!is.na(slope)) %>%
   mutate(slope=slope/2) %>%
   group_by(gene.symbol) %>%
@@ -663,7 +676,7 @@ g <- ggplot(lm.df.l.auto, aes(x=cn, y=slope)) +
   geom_violin(position=position_dodge(0.9), show.legend=FALSE) +
   geom_boxplot(position=position_dodge(0.9), width=0.2, outlier.shape=NA, show.legend=FALSE) +
   # geom_point(shape=21, position=ggbeeswarm::position_beeswarm(dodge.width=0.9), alpha=0.5) +
-  geom_text(aes(x=Inf, y=-Inf, label=paste0(n, ' genes')), vjust=-1, hjust=1, size=5) +
+  # geom_text(aes(x=Inf, y=-Inf, label=paste0(n, ' genes')), vjust=-1, hjust=1, size=5) +
   scale_x_discrete(labels=c('1 < CN < 2', '2 < CN')) +
   lemon::facet_rep_grid(Gender ~ type, switch='y') +
   labs(x='CN', y='Slope') +
@@ -673,8 +686,8 @@ g <- ggplot(lm.df.l.auto, aes(x=cn, y=slope)) +
   theme(strip.placement='outside') +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5))
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS7a.png'), dpi=100, width=5, height=8)
-ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS7a.pdf'), width=5, height=8, useDingbats=TRUE)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS5a.png'), dpi=100, width=5, height=8)
+ggsave(g, file=here('10_chrX_SCNA_vs_gene_expression/output/01_TCGA_chrX_SCNA_vs_gene_expression', 'FigS5a.pdf'), width=5, height=8, useDingbats=TRUE)
 
 ## Perform one sample T-test to see if average of slopes is significantly different from 1
 female.autosome.cn1to2 <- t.test(lm.df.l.auto %>% filter(Gender=='Female' & cn=='1 < CN < 2') %>% pull(slope), mu=1)

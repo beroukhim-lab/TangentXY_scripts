@@ -219,19 +219,19 @@ for (i in 1:length(projects)) {
       if (os.df.i$wt >=5 & os.df.i$alt >= 5) {
         surv.os.i <- ggsurvfit::survfit2(Surv(OS.time, OS) ~ if.alt, data=os.data)
         survdiff.os.i <- survdiff(Surv(OS.time, OS) ~ if.alt, data=os.data)
-        g <- ggsurvfit(surv.os.i) +
-          add_confidence_interval() +
-          add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.os.i$pvalue, digit=3))), size=10, hjust=1) +
-          add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-          scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
-          labs(title=paste0('OS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
-          theme_classic(base_size=30) +
-          theme(axis.line.x=element_line(linewidth=0.5)) +
-          theme(axis.line.y=element_line(linewidth=0.5))
-          theme(legend.position = c(0.8, 0.7))
-        ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/OS', paste0('OS_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
+        # g <- ggsurvfit(surv.os.i) +
+        #   add_confidence_interval() +
+        #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.os.i$pvalue, digit=3))), size=10, hjust=1) +
+        #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
+        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
+        #   labs(title=paste0('OS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
+        #   theme_classic(base_size=30) +
+        #   theme(axis.line.x=element_line(linewidth=0.5)) +
+        #   theme(axis.line.y=element_line(linewidth=0.5))
+        #   theme(legend.position = c(0.8, 0.7))
+        # ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/OS', paste0('OS_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
 
         os.df.i <- os.df.i %>%
             mutate(pval=survdiff.os.i$pvalue)
@@ -240,19 +240,19 @@ for (i in 1:length(projects)) {
       if (pfs.df.i$wt >=5 & pfs.df.i$alt >= 5) {
         surv.pfs.i <- ggsurvfit::survfit2(Surv(PFS.time, PFS) ~ if.alt, data=pfs.data)
         survdiff.pfs.i <- survdiff(Surv(PFS.time, PFS) ~ if.alt, data=pfs.data)
-        g <- ggsurvfit(surv.pfs.i) +
-          add_confidence_interval() +
-          add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.i$pvalue, digit=3))), size=10, hjust=1) +
-          add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-          scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
-          labs(title=paste0('PFS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
-          theme_bw(base_size=30) +
-          theme(panel.grid.major=element_blank()) +
-          theme(panel.grid.minor=element_blank()) +
-          theme(legend.position = c(0.8, 0.7))
-        ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/PFS', paste0('PFS_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
+        # g <- ggsurvfit(surv.pfs.i) +
+        #   add_confidence_interval() +
+        #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.i$pvalue, digit=3))), size=10, hjust=1) +
+        #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
+        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
+        #   labs(title=paste0('PFS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
+        #   theme_bw(base_size=30) +
+        #   theme(panel.grid.major=element_blank()) +
+        #   theme(panel.grid.minor=element_blank()) +
+        #   theme(legend.position = c(0.8, 0.7))
+        # ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/PFS', paste0('PFS_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
 
         pfs.df.i <- pfs.df.i %>%
             mutate(pval=survdiff.pfs.i$pvalue)
@@ -261,19 +261,19 @@ for (i in 1:length(projects)) {
       if (pfi.df.i$wt >=5 & pfi.df.i$alt >= 5) {
         surv.pfi.i <- ggsurvfit::survfit2(Surv(PFI.time, PFI) ~ if.alt, data=pfi.data)
         survdiff.pfi.i <- survdiff(Surv(PFI.time, PFI) ~ if.alt, data=pfi.data)
-        g <- ggsurvfit(surv.pfi.i) +
-          add_confidence_interval() +
-          add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfi.i$pvalue, digit=3))), size=10, hjust=1) +
-          add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-          scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-          scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
-          labs(title=paste0('PFI ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
-          theme_bw(base_size=30) +
-          theme(panel.grid.major=element_blank()) +
-          theme(panel.grid.minor=element_blank()) +
-          theme(legend.position = c(0.8, 0.7))
-        ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/PFI', paste0('PFI_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
+        # g <- ggsurvfit(surv.pfi.i) +
+        #   add_confidence_interval() +
+        #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfi.i$pvalue, digit=3))), size=10, hjust=1) +
+        #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
+        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
+        #   labs(title=paste0('PFI ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
+        #   theme_bw(base_size=30) +
+        #   theme(panel.grid.major=element_blank()) +
+        #   theme(panel.grid.minor=element_blank()) +
+        #   theme(legend.position = c(0.8, 0.7))
+        # ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis/KMplot/PFI', paste0('PFI_', project.i, '_', chr.i, '_', alt.i, '.png')), dpi=100, width=10, height=10)
 
         pfi.df.i <- pfi.df.i %>%
             mutate(pval=survdiff.pfi.i$pvalue)
@@ -293,10 +293,13 @@ for (i in 1:length(projects)) {
 }
 
 os.df <- os.df %>%
+  filter(!(wt==0 | alt==0)) %>%
   mutate(adj.pval=p.adjust(pval, method='bonferroni'))
 pfs.df <- pfs.df %>%
+  filter(!(wt==0 | alt==0)) %>%
   mutate(adj.pval=p.adjust(pval, method='bonferroni'))
 pfi.df <- pfi.df %>%
+  filter(!(wt==0 | alt==0)) %>%
   mutate(adj.pval=p.adjust(pval, method='bonferroni'))
 
 saveRDS(os.df, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'os.df.rds'), compress=FALSE)
@@ -367,14 +370,14 @@ g <- ggsurvfit(surv.pfs.ov.chrX.del) +
   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
-  labs(title='OV ~ ChrX deletion', x='Progression-free survival (Days)') +
+  labs(title='ChrX deletion in OV', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(legend.position = c(0.8, 0.85)) +
   theme(legend.background=element_blank())
-ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4a.png'), dpi=100, width=6, height=6)
-ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4a.pdf'), width=6, height=6)
+ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig3f.png'), dpi=100, width=6, height=6)
+ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig3f.pdf'), width=6, height=6)
 
 ## PFS ~ ChrY Del in UVM
 cli.karyo.uvm.chrY.del <- cli.karyo %>%
@@ -392,13 +395,15 @@ g <- ggsurvfit(surv.pfs.uvm.chrY.del) +
   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
-  labs(title='UVM ~ ChrY deletion', x='Progression-free survival (Days)') +
+  labs(title='ChrY deletion in UVM', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(legend.position = c(0.8, 0.85)) +
   theme(legend.background=element_blank())
-ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4b.png'), dpi=100, width=6, height=6)
-ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig4b.pdf'), width=6, height=6)
+ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig3g.png'), dpi=100, width=6, height=6)
+ggsave(g, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'Fig3g.pdf'), width=6, height=6)
 
-
+## Make supplementary tables
+sheets <- list('PFS'=pfs.df %>% arrange(adj.pval, pval))
+openxlsx::write.xlsx(sheets, file=here('09_TCGA_SCNA_vs_prognosis/output/01_SCNA_vs_prognosis', 'TableS2.xlsx'))

@@ -23,7 +23,7 @@ hg19 <- rCGH::hg19 %>%
   mutate(length=case_when(chrom=='Y' ~ 28800000, TRUE ~ length)) # Exclude heterochromatin region of chrY
 
 arm.length <- hg19 %>%
-  mutate(p=case_when(chrom=='Y' ~ centromerStart - 2600000, TRUE ~ centromerStart - 1)) %>% # Exclude PAR1 fo chrY
+  mutate(p=case_when(chrom=='Y' ~ centromerStart - 2600000, TRUE ~ centromerStart - 1)) %>% # Exclude PAR1 of chrY
   mutate(q=length - centromerEnd) %>%
   rename(chr=chrom) %>%
   select(chr, p, q) %>%
@@ -109,9 +109,9 @@ arm.classifier <- function(df) {
     del.ratio <- 0
   }
 
-  if (amp.ratio > arm.alt.thresh) {
+  if (amp.ratio >= arm.alt.thresh) {
     arm.class <- 'Amp'
-  } else if (del.ratio > arm.alt.thresh) {
+  } else if (del.ratio >= arm.alt.thresh) {
     arm.class <- 'Del'
   } else {
     arm.class <- 'No.Alt'
@@ -239,8 +239,8 @@ g <- ggplot(sample.amp.del.chrx, aes(x=ploidy.class.total, y=fraction)) +
   theme(strip.background=element_blank()) +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4a.png'), dpi=100, width=9, height=6)
-ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4a.pdf'), width=9, height=6)
+ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'Fig3c.png'), dpi=100, width=9, height=6)
+ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'Fig3c.pdf'), width=9, height=6)
 
 ## ChrY
 chry.project.order <-  sample.amp.del.count %>%
@@ -293,6 +293,6 @@ g <- ggplot(sample.amp.del.chry, aes(x=ploidy.class.total, y=fraction)) +
   theme(strip.background=element_blank()) +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   theme(axis.title.x=element_blank())
-ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4b.png'), dpi=100, width=6, height=6)
-ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'FigS4b.pdf'), width=6, height=6)
+ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'Fig3d.png'), dpi=100, width=6, height=6)
+ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'Fig3d.pdf'), width=6, height=6)
 

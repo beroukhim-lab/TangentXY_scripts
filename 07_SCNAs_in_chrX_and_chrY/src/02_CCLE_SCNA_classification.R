@@ -45,20 +45,16 @@ cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_da
 cbio <- read.delim(cbio.file) %>%
   setNames(gsub('\\.', '', colnames(.))) %>%
   mutate(ModelID=gsub('-', '.', DepMapID)) %>%
-  left_join(annotations %>% select(ModelID, tcga_code), by='ModelID')
-
-unique.remove.na <- function(vector) {
-  unique.vector <- unique(vector)
-  if (anyNA(unique.vector)) {
-    unique.vector <- unique.vector[!is.na(unique.vector)]
-  }
-  return(unique.vector)
-}
+  filter(!is.na(ModelID)) %>%
+  filter(AnnotationSource=='CCLE') %>%
+  left_join(annotations %>% select(ModelID, tcga_code), by='ModelID') %>%
+  mutate(ploidy.class=case_when(is.na(Ploidy) & is.na(GenomeDoublings) ~ NA,
+                                Ploidy < polyploidy.threshold & GenomeDoublings==0 ~ 'Diploid',
+                                TRUE ~ 'Polyploid'))
 
 purity.ploidy <- cbio %>%
-  select(ModelID, Purity, Ploidy, GenomeDoublings) %>%
-  group_by(ModelID) %>%
-  summarize(Purity=unique.remove.na(Purity), Ploidy=unique.remove.na(Ploidy), GenomeDoublings=unique.remove.na(GenomeDoublings))
+  select(ModelID, Purity, Ploidy, GenomeDoublings, ploidy.class) %>%
+  group_by(ModelID)
 
 segment.smoothed.CNA.obj <- readRDS(file=here('06_CCLE_TangentXY/output/07_CBS', 'CBS_TangentXY.rds'))
 

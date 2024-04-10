@@ -141,5 +141,5 @@ g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.me
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank()) +
   theme(plot.margin=margin(5,1,2,1, unit='cm'))
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig5f.png'), dpi=100, width=9, height=7)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig5f.pdf'), width=9, height=7, useDingbats=TRUE)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig4f.png'), dpi=100, width=9, height=7)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig4f.pdf'), width=9, height=7, useDingbats=TRUE)
