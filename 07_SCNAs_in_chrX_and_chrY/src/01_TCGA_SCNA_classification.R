@@ -252,9 +252,9 @@ chry.project.order <-  sample.amp.del.count %>%
 
 g <- ggplot(sample.amp.del.count %>%
       filter(chr=='Y') %>%
-      mutate(project.n=paste0(project, ' (n=', total, ')')) %>%
+      mutate(Gender.n=paste0(Gender, ' (n=', total, ')')) %>%
       mutate(project=factor(.$project, levels=chry.project.order)),
-    aes(x=project.n, y=fraction)) +
+    aes(x=Gender.n, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity', position='fill') +
   scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +

@@ -143,3 +143,18 @@ g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.me
   theme(plot.margin=margin(5,1,2,1, unit='cm'))
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig4f.png'), dpi=100, width=9, height=7)
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/10_CCLE_ASE_analysis', 'Fig4f.pdf'), width=9, height=7, useDingbats=TRUE)
+
+
+## Confirm that all CCLE samples are publicly available
+sra.file <- here('11_chrX_allele_specific_expression/data', 'SraRunTable.txt')
+sra <- read.delim(sra.file, sep=',')
+
+sra.wxs <- sra %>%
+  filter(Assay.Type=='WXS')
+
+sra.wxs.modelid <- sif %>%
+  filter(CCLEName %in% sra.wxs$Sample.Name) %>%
+  pull(ModelID)
+
+intersect(ase.chrx.annot.major.rate.female$ModelID, sra.wxs.modelid) %>% length() #48
+setdiff(ase.chrx.annot.major.rate.female$ModelID, sra.wxs.modelid) %>% length() #0

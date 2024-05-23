@@ -160,3 +160,84 @@ g <- ggplot(signal.noise, aes(x=n.num2, y=noise.x)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a.png'), dpi=100, width=14, height=6)
 ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a.pdf'), width=14, height=6)
+
+
+
+
+stat.test.noise.chrX.FMseparated2 <- signal.noise %>%
+  filter(method!='-') %>%
+  mutate(n.num=as.character(n.num)) %>%
+  filter(n.num %in% c('10', '50', '100', '200', '500')) %>%
+  mutate(n.num=factor(.$n.num, levels=c('10', '50', '100', '200', '500'))) %>%
+  group_by(Gender, n.num) %>%
+  rstatix::wilcox_test(noise.x ~ method, paired=TRUE) %>%
+  rstatix::adjust_pvalue(method = "bonferroni") %>%
+  rstatix::add_significance()
+
+g <- ggplot(signal.noise %>% filter(method!='-'), aes(x=n.num2, y=noise.x)) +
+  geom_boxplot(aes(group=interaction(Gender, method, n.num2), fill=method2)) +
+  scale_fill_manual(values=list('-'='gray', 'Sex-matched Tangent_Female'='red', 'Sex-matched Tangent_Male'='royalblue', 'TangentXY'='green')) +
+  lemon::facet_rep_wrap(~Gender, nrow=1, scales='free_y', repeat.tick.labels=TRUE) +
+  ggpubr::stat_pvalue_manual(stat.test.noise.chrX.FMseparated2 %>% rstatix::add_xy_position(x='n.num'), label='p.adj.signif', col='black', size=5) +
+  labs(title='Noise (ChrX)', x='# normal samples in reference plane', y='Noise', fill='Method') +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a_2.png'), dpi=100, width=14, height=6)
+
+
+signal.noise.w <- signal.noise %>%
+  select(-c('signal.x', 'method', 'n.num', 'ID', 'TCGA.ID', 'project', 'type', 'NT', 'tss', 'plate', 'center', 'seq.center', 'batch')) %>%
+  filter(method2!='-') %>%
+  pivot_wider(names_from=method2, values_from=noise.x) %>%
+  setNames(sub('Sex-matched ', 'SM', colnames(.))) %>%
+  mutate(SMTangent=case_when(!is.na(SMTangent_Female) ~ SMTangent_Female,
+                              !is.na(SMTangent_Male) ~ SMTangent_Male)) %>%
+  mutate(Greater=case_when(TangentXY > SMTangent ~ 'TangentXY',
+                            TangentXY < SMTangent ~ 'Sex-matched Tangent')) %>%
+  mutate(delta=SMTangent - TangentXY) %>%
+  mutate(delta.ratio=delta/SMTangent)
+
+g <- ggplot(signal.noise.w, aes(x=TangentXY, y=SMTangent)) +
+  geom_abline(intercept=0, slope=1, linetype='dashed', col='gray') +
+  geom_point(aes(col=Greater)) +
+  lemon::facet_rep_grid(Gender ~ n.num2, repeat.tick.labels=TRUE, switch='y') +
+  scale_x_continuous(limits=c(0, NA)) +
+  scale_y_continuous(limits=c(0, NA)) +
+  coord_fixed() +
+  labs(title='Noise (ChrX)', y='Sex-matched Tangent') +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(strip.placement='outside') +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5))
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a_3.png'), dpi=100, width=16, height=6)
+
+g <- ggplot(signal.noise.w, aes(x=n.num2, y=delta.ratio)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_violin(aes(group=interaction(Gender, n.num2))) +
+  geom_boxplot(aes(group=interaction(Gender, n.num2)), width=0.2, outlier.shape=NA) +
+  lemon::facet_rep_wrap(~Gender, nrow=1, repeat.tick.labels=TRUE) +
+  # labs(title='Noise (ChrX)', x='# normal samples in reference plane', y=expression(paste({Noise['SMTangent']}, ' - ', {Noise['TangentXY']}, '/', {Noise['SMTangent']}, sep=''))) +
+  labs(title='Noise (ChrX)', x='# normal samples in reference plane', y=expression(paste(Delta, 'Noise', '/', {Noise['SMTangent']}, sep=''))) +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a_4.png'), dpi=100, width=14, height=6)
+
+g <- ggplot(signal.noise.w, aes(x=n.num2, y=delta)) +
+  geom_hline(yintercept=0, linetype='dashed') +
+  geom_violin(aes(group=interaction(Gender, n.num2))) +
+  geom_boxplot(aes(group=interaction(Gender, n.num2)), width=0.2, outlier.shape=NA) +
+  lemon::facet_rep_wrap(~Gender, nrow=1, scales='free', repeat.tick.labels=TRUE) +
+  labs(title='Noise (ChrX)', x='# normal samples in reference plane', y=expression(paste(Delta, 'Noise', sep=''))) +
+  theme_classic(base_size=20) +
+  theme(strip.background=element_blank()) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a_5.png'), dpi=100, width=10, height=6)
