@@ -241,4 +241,3 @@ g <- ggplot(signal.noise.w, aes(x=n.num2, y=delta)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 ggsave(g, file=here('04_TCGA_Tangent_vs_TangentXY/output/05_SMTangent_vs_TangentXY', 'FigS2a_5.png'), dpi=100, width=10, height=6)
-
