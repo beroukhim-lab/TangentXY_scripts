@@ -28,12 +28,11 @@ g <- ggplot(ase.chrx.annot.major.rate.female.purity, aes(x=purity, y=major.rate.
   scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_fixed(ratio=1.5) +
   lemon::facet_rep_wrap(~karyo.class, nrow=1, repeat.tick.labels=TRUE) +
-  labs(y='ASE value', col='Ploidy') +
+  labs(x='Tumor purity', y='ASE value', col='Ploidy') +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
-  theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
+  theme(axis.line.y=element_line(linewidth=0.5))
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.png'), dpi=100, width=10, height=5)
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/05_TCGA_ASE_vs_purity', 'FigS7.pdf'), width=10, height=5, useDingbats=TRUE)
 
@@ -50,7 +49,7 @@ reg <- ase.chrx.annot.major.rate.female.purity %>%
 #   # mutate(intercept=0.5, slope=0.5) %>%
 #   mutate(expected.ase.value=intercept + slope * purity) %>%
 #   mutate(diff=expected.ase.value - major.rate.mean) %>%
-#   filter(karyo.class=='No.Alt') %>%
+#   filter(karyo.class=='No.Arm-level.Alt') %>%
 #   group_by(project, ploidy.class) %>%
 #   mutate(diff.median=median(diff), n=n(), x=length(diff[diff > 0])) %>%
 #   ungroup() %>%
@@ -83,7 +82,7 @@ ase.chrx.annot.major.rate.diff.summary <- ase.chrx.annot.major.rate.female.purit
   # mutate(intercept=0.5, slope=0.5) %>%
   mutate(expected.ase.value=intercept + slope * purity) %>%
   mutate(diff=expected.ase.value - major.rate.mean) %>%
-  filter(karyo.class=='No.Alt') %>%
+  filter(karyo.class=='No.Arm-level.Alt') %>%
   group_by(karyo.class, project, ploidy.class) %>%
   summarize(diff.median=median(diff), N=n(), X=length(diff[diff > 0]), max.diff=max(diff)) %>%
   arrange(ploidy.class, desc(diff.median)) %>%

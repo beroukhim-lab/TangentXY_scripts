@@ -12,9 +12,6 @@ exon.positions.df <- readRDS(file=here('11_chrX_allele_specific_expression/outpu
 
 sample.amp.del <- readRDS(here('07_SCNAs_in_chrX_and_chrY/output/02_CCLE_SCNA_classification', 'sample.amp.del.rds'))
 
-## Ploidy
-polyploidy.threshold <- 2.5
-
 Mahmoud.supp.file <- here('05_CCLE_data_preparation/data/CCLE_Mahmoud2019Nature', '41586_2019_1186_MOESM4_ESM.xlsx')
 annotations <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Cell Line Annotations') %>%
   mutate(ModelID=sub('-', '.', depMapID))
@@ -26,20 +23,6 @@ sample.with.wes <- datasets %>%
 sample.with.wes.depmapid <- annotations %>%
   filter(CCLE_ID %in% sample.with.wes$CCLE_ID) %>%
   pull(ModelID)
-
-# cbio.file <- here('data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
-# cbio <- read.delim(cbio.file) %>%
-#   setNames(gsub('\\.', '', colnames(.))) %>%
-#   mutate(DepMapID=gsub('-', '.', DepMapID)) %>%
-#   filter(!is.na(DepMapID)) %>%
-#   filter(AnnotationSource=='CCLE') %>%
-#   left_join(annotations %>% select(DepMapID, tcga_code), by='DepMapID') %>%
-#   mutate(ploidy.class=case_when(is.na(Ploidy) & is.na(GenomeDoublings) ~ NA,
-#                                 Ploidy < polyploidy.threshold & GenomeDoublings==0 ~ 'Diploid',
-#                                 TRUE ~ 'Multiploid'))
-
-# ploidy <- cbio %>%
-#   select(DepMapID, Purity, Ploidy, GenomeDoublings, ploidy.class)
 
 
 ## Load Terra output
@@ -102,9 +85,8 @@ ase.chrx.annot.major.rate.female <- ase.chrx.annot.major.rate %>%
   mutate(major.rate.mean=mean(major.rate)) %>%
   mutate(sd=sd(major.rate)) %>%
   ungroup() %>%
-  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
-  mutate(ploidy.class=case_when(Ploidy < 2.5 & GenomeDoublings==0 ~ 'Diploid', Ploidy >= 2.5 | GenomeDoublings > 0 ~ 'Polyploid')) %>%
+  filter(karyo.class %in% c('No.Arm-level.Alt', 'Whole.Amp')) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Arm-level.Alt', 'Whole.Amp'))) %>%
   filter(!is.na(ploidy.class)) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid'))) %>%
   mutate(tcga_code=factor(.$tcga_code, levels=.$tcga_code %>% unique() %>% sort())) %>%
@@ -128,7 +110,6 @@ stat.test.ploidy <- ase.chrx.annot.major.rate.female %>%
 g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(0.5), alpha=0.5) +
-  scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
   scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1), clip='off') +

@@ -28,8 +28,8 @@ chrXY.karyo <- sample.amp.del %>%
 cli.karyo <- cli %>%
   select(-c('gender', 'type')) %>%
   inner_join(chrXY.karyo, by='TCGA.ID') %>%
-  mutate(if.amp=case_when(karyo.class %in% c('No.Alt', 'Whole.Amp') ~ karyo.class)) %>%
-  mutate(if.del=case_when(karyo.class %in% c('No.Alt', 'Whole.Del') ~ karyo.class))
+  mutate(if.amp=case_when(karyo.class %in% c('No.Arm-level.Alt', 'Whole.Amp') ~ karyo.class)) %>%
+  mutate(if.del=case_when(karyo.class %in% c('No.Arm-level.Alt', 'Whole.Del') ~ karyo.class))
 
 ## Pan-cancer
 ## OS ~ Amp
@@ -199,19 +199,19 @@ for (i in 1:length(projects)) {
       os.df.i <- data.frame(tumor.type=project.i,
                             chr=chr.i,
                             alt.type=alt.i,
-                            wt=os.data %>% filter(if.alt=='No.Alt') %>% nrow(),
+                            wt=os.data %>% filter(if.alt=='No.Arm-level.Alt') %>% nrow(),
                             alt=os.data %>% filter(if (alt.i=='Amp') if.alt=='Whole.Amp' else if (alt.i=='Del') if.alt=='Whole.Del') %>% nrow())
 
       pfs.df.i <- data.frame(tumor.type=project.i,
                             chr=chr.i,
                             alt.type=alt.i,
-                            wt=os.data %>% filter(if.alt=='No.Alt') %>% nrow(),
+                            wt=os.data %>% filter(if.alt=='No.Arm-level.Alt') %>% nrow(),
                             alt=os.data %>% filter(if (alt.i=='Amp') if.alt=='Whole.Amp' else if (alt.i=='Del') if.alt=='Whole.Del') %>% nrow())
 
       pfi.df.i <- data.frame(tumor.type=project.i,
                             chr=chr.i,
                             alt.type=alt.i,
-                            wt=os.data %>% filter(if.alt=='No.Alt') %>% nrow(),
+                            wt=os.data %>% filter(if.alt=='No.Arm-level.Alt') %>% nrow(),
                             alt=os.data %>% filter(if (alt.i=='Amp') if.alt=='Whole.Amp' else if (alt.i=='Del') if.alt=='Whole.Del') %>% nrow())
 
       print(paste(i, project.i, chr.i, alt.i))
@@ -223,8 +223,8 @@ for (i in 1:length(projects)) {
         #   add_confidence_interval() +
         #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.os.i$pvalue, digit=3))), size=10, hjust=1) +
         #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_color_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
         #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
         #   labs(title=paste0('OS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
         #   theme_classic(base_size=30) +
@@ -244,8 +244,8 @@ for (i in 1:length(projects)) {
         #   add_confidence_interval() +
         #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.i$pvalue, digit=3))), size=10, hjust=1) +
         #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_color_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
         #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
         #   labs(title=paste0('PFS ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
         #   theme_bw(base_size=30) +
@@ -265,8 +265,8 @@ for (i in 1:length(projects)) {
         #   add_confidence_interval() +
         #   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfi.i$pvalue, digit=3))), size=10, hjust=1) +
         #   add_risktable(risktable_stats='n.risk', size=7, theme=theme_risktable_default(plot.title.size=10, axis.text.y.size=10)) +
-        #   scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
-        #   scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_color_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
+        #   scale_fill_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='red', 'Whole.Del'='blue')) +
         #   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
         #   labs(title=paste0('PFI ~ Chr', chr.i, ' ', alt.i, ' (', project.i, ')'), x='Days') +
         #   theme_bw(base_size=30) +
@@ -367,8 +367,8 @@ survdiff.pfs.ov.chrX.del <- survdiff(Surv(PFS.time, PFS) ~ if.alt, data=cli.kary
 g <- ggsurvfit(surv.pfs.ov.chrX.del) +
   add_censor_mark() +
   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.ov.chrX.del$pvalue, digit=3))), size=5, hjust=1, y=1) +
-  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
-  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_color_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
   labs(title='ChrX deletion in OV', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +
@@ -392,8 +392,8 @@ survdiff.pfs.uvm.chrY.del <- survdiff(Surv(PFS.time, PFS) ~ if.alt, data=cli.kar
 g <- ggsurvfit(surv.pfs.uvm.chrY.del) +
   add_censor_mark() +
   add_pvalue(location='annotation', caption=paste('p=', as.character(format(survdiff.pfs.uvm.chrY.del$pvalue, digit=3))), size=5, hjust=1, y=1) +
-  scale_color_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
-  scale_fill_manual(values=c('No.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_color_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='black', 'Whole.Amp'='#D7191C', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1), breaks=seq(0, 1, 0.2)) +
   labs(title='ChrY deletion in UVM', x='Progression-free survival (Days)') +
   theme_classic(base_size=20) +

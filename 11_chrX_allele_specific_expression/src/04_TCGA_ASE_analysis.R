@@ -85,8 +85,8 @@ ase.chrx.annot.major.rate.female <- ase.chrx.annot.major.rate %>%
   mutate(major.rate.mean=mean(major.rate)) %>%
   mutate(sd=sd(major.rate)) %>%
   ungroup() %>%
-  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
+  filter(karyo.class %in% c('No.Arm-level.Alt', 'Whole.Amp')) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Arm-level.Alt', 'Whole.Amp'))) %>%
   mutate(ploidy.class=case_when(ploidy < 2.5 & Genome.doublings==0 ~ 'Diploid', ploidy >= 2.5 | Genome.doublings > 0 ~ 'Polyploid')) %>%
   filter(!is.na(ploidy.class)) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid'))) %>%
@@ -111,7 +111,6 @@ stat.test.ploidy <- ase.chrx.annot.major.rate.female %>%
 g <- ggplot(ase.chrx.annot.major.rate.female, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class), size=3, shape=21, alpha=0.5, position=position_jitterdodge(0.5)) +
-  scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_y_continuous(breaks=seq(0.5, 1, by=0.1)) +
   scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1), clip='off') +
@@ -143,7 +142,6 @@ object.for.plot <- ase.chrx.annot.major.rate.female %>%
 g <- ggplot(object.for.plot, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class), size=3, shape=21, position=position_jitterdodge(), alpha=0.75) +
-  scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
   coord_cartesian(ylim=c(0.5, 1)) +
   lemon::facet_rep_wrap(~project, nrow=5, drop=F, repeat.tick.labels=TRUE) +
@@ -153,9 +151,11 @@ g <- ggplot(object.for.plot, aes(x=karyo.class, y=major.rate.median)) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.png'), dpi=100, width=20, height=14)
-ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.pdf'), width=20, height=14, useDingbats=TRUE)
+  theme(axis.title.x=element_blank()) +
+  theme(axis.text.x=element_text(angle=25, vjust=1, hjust=1)) +
+  theme(plot.margin=unit(c(0.5, 0.5, 0.5, 1), 'cm'))
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.png'), dpi=100, width=20, height=16)
+ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6a.pdf'), width=20, height=16, useDingbats=TRUE)
 
 
 
@@ -198,6 +198,7 @@ ase.auto.annot.major.rate <- ase.auto.annot %>%
   mutate(major.rate=case_when(ref > alt ~ ref, ref < alt ~ alt, ref==alt ~ ref))
 
 ase.auto.annot.major.rate.summary <- ase.auto.annot.major.rate %>%
+  filter(!is.na(Gender)) %>%
   filter(exon.intron=='exon') %>%
   group_by(SampleID, contig) %>%
   mutate(points.no=n()) %>%
@@ -207,8 +208,8 @@ ase.auto.annot.major.rate.summary <- ase.auto.annot.major.rate %>%
   mutate(sd=sd(major.rate)) %>%
   ungroup() %>%
   mutate(contig=factor(.$contig, levels=.$contig %>% unique() %>% gtools::mixedsort())) %>%
-  filter(karyo.class %in% c('No.Alt', 'Whole.Amp')) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Alt', 'Whole.Amp'))) %>%
+  filter(karyo.class %in% c('No.Arm-level.Alt', 'Whole.Amp')) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('No.Arm-level.Alt', 'Whole.Amp'))) %>%
   mutate(ploidy.class=case_when(ploidy < 2.5 & Genome.doublings==0 ~ 'Diploid', ploidy >= 2.5 | Genome.doublings > 0 ~ 'Polyploid')) %>%
   filter(!is.na(ploidy.class)) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid'))) %>%
@@ -230,9 +231,8 @@ object.for.plot.auto <- ase.auto.annot.major.rate.summary %>%
 g <- ggplot(object.for.plot.auto, aes(x=karyo.class, y=major.rate.median)) +
   geom_boxplot(aes(col=ploidy.class, group=interaction(ploidy.class, karyo.class, drop=FALSE)), position='dodge', outlier.shape=NA, show.legend=FALSE) +
   geom_point(aes(col=ploidy.class, shape=Gender), size=3, position=position_jitterdodge(), alpha=0.5) +
-  scale_x_discrete(labels=c('No CNAs', 'Amp')) +
   scale_color_manual(values=c('Diploid'='#4DAF4A', 'Polyploid'='#FF7F00')) +
-  scale_shape_manual(values=c('Female'=21, 'Male'=24)) +
+  scale_shape_manual(values=c('Female'=21, 'Male'=24), breaks=c('Female', 'Male')) +
   coord_cartesian(ylim=c(0.5, 1)) +
   lemon::facet_rep_wrap(~contig, nrow=4, drop=F, repeat.tick.labels=TRUE) +
   labs(y='ASE value', col='Ploidy', title=tumor.type) +
@@ -241,6 +241,9 @@ g <- ggplot(object.for.plot.auto, aes(x=karyo.class, y=major.rate.median)) +
   theme(strip.background=element_blank()) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
+  theme(axis.title.x=element_blank()) +
+  theme(axis.title.y=element_text(margin=margin(t=0, r=50, b=0, l=0))) +
+  theme(axis.text.x=element_text(angle=25, vjust=1, hjust=1)) +
+  theme(plot.margin=unit(c(0.5, 0.5, 0.5, 1), 'cm'))
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.png'), dpi=100, width=20, height=14)
 ggsave(g, file=here('11_chrX_allele_specific_expression/output/04_TCGA_ASE_analysis', 'FigS6b.pdf'), width=20, height=14, useDingbats=TRUE)

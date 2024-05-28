@@ -39,7 +39,7 @@ Mahmoud.supp.file <- here('05_CCLE_data_preparation/data/CCLE_Mahmoud2019Nature'
 annotations <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Cell Line Annotations') %>%
   mutate(ModelID=sub('-', '.', depMapID))
 
-datasets <- readxl::read_xlsx(Mahmoud.supp.file, sheet='Datasets')
+polyploidy.threshold <- 2.5
 
 cbio.file <- here('07_SCNAs_in_chrX_and_chrY/data', 'ccle_broad_2019_clinical_data.tsv') # Downloaded from cBioPortal (https://www.cbioportal.org/study/clinicalData?id=ccle_broad_2019)
 cbio <- read.delim(cbio.file) %>%
@@ -123,7 +123,7 @@ arm.classifier <- function(df) {
   } else if (del.ratio > arm.alt.thresh) {
     arm.class <- 'Del'
   } else {
-    arm.class <- 'No.Alt'
+    arm.class <- 'No.Arm-level.Alt'
   }
 
   return(arm.class)
@@ -143,8 +143,8 @@ karyo.classifier <- function(df) {
   alt.class.unified <- alt.class.unique %>% sort() %>% paste(collapse='_')
   if (length(alt.class.unique)==1) {
     karyo.detail <- NA
-    if (alt.class.unified=='No.Alt') {
-      karyo <- 'No.Alt'
+    if (alt.class.unified=='No.Arm-level.Alt') {
+      karyo <- 'No.Arm-level.Alt'
     } else if (alt.class.unified=='Amp') {
       karyo <- 'Whole.Amp'
     } else if (alt.class.unified=='Del') {
@@ -152,13 +152,13 @@ karyo.classifier <- function(df) {
     }
   } else {
     karyo.detail <- df %>%
-      filter(arm.class!='No.Alt') %>%
+      filter(arm.class!='No.Arm-level.Alt') %>%
       mutate(arm.karyo=paste(arm, arm.class, sep='_')) %>%
       pull(arm.karyo) %>%
       paste(collapse='&')
-    if (alt.class.unified=='Amp_No.Alt') {
+    if (alt.class.unified=='Amp_No.Arm-level.Alt') {
       karyo <- 'Arm.Amp'
-    } else if (alt.class.unified=='Del_No.Alt') {
+    } else if (alt.class.unified=='Del_No.Arm-level.Alt') {
       karyo <- 'Arm.Del'
     } else if (alt.class.unified=='Amp_Del') {
       karyo <- 'Amp.Del'

@@ -25,14 +25,14 @@ saveRDS(mut.data, file=here('08_TCGA_SCNA_vs_gene_mutation/output/01_SCNA_vs_gen
 chrx.karyo <- sample.amp.del %>%
   filter(chr=='X') %>%
   select(SampleID, karyo.class, TCGA.ID, Gender, project) %>%
-  mutate(chrX.class=case_when(karyo.class=='No.Alt' ~ 'WT', karyo.class %in% c('Whole.Amp', 'Arm.Amp') ~ 'Amp', karyo.class %in% c('Whole.Del', 'Arm.Del') ~ 'Del')) %>%
+  mutate(chrX.class=case_when(karyo.class=='No.Arm-level.Alt' ~ 'WT', karyo.class %in% c('Whole.Amp', 'Arm.Amp') ~ 'Amp', karyo.class %in% c('Whole.Del', 'Arm.Del') ~ 'Del')) %>%
   filter(!is.na(chrX.class)) %>%
   mutate(chrX.class=factor(.$chrX.class, levels=c('WT', 'Amp', 'Del')))
 
 chry.karyo <- sample.amp.del %>%
   filter(chr=='Y') %>%
   select(SampleID, karyo.class, TCGA.ID, Gender, project) %>%
-  mutate(chrY.class=case_when(karyo.class=='No.Alt' ~ 'WT', karyo.class %in% c('Whole.Amp', 'Arm.Amp') ~ 'Amp', karyo.class %in% c('Whole.Del', 'Arm.Del') ~ 'Del')) %>%
+  mutate(chrY.class=case_when(karyo.class=='No.Arm-level.Alt' ~ 'WT', karyo.class %in% c('Whole.Amp', 'Arm.Amp') ~ 'Amp', karyo.class %in% c('Whole.Del', 'Arm.Del') ~ 'Del')) %>%
   filter(!is.na(chrY.class)) %>%
   mutate(chrY.class=factor(.$chrY.class, levels=c('WT', 'Amp', 'Del')))
 

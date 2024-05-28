@@ -114,7 +114,7 @@ arm.classifier <- function(df) {
   } else if (del.ratio >= arm.alt.thresh) {
     arm.class <- 'Del'
   } else {
-    arm.class <- 'No.Alt'
+    arm.class <- 'No.Arm-level.Alt'
   }
 
   return(arm.class)
@@ -134,8 +134,8 @@ karyo.classifier <- function(df) {
   alt.class.unified <- alt.class.unique %>% sort() %>% paste(collapse='_')
   if (length(alt.class.unique)==1) {
     karyo.detail <- NA
-    if (alt.class.unified=='No.Alt') {
-      karyo <- 'No.Alt'
+    if (alt.class.unified=='No.Arm-level.Alt') {
+      karyo <- 'No.Arm-level.Alt'
     } else if (alt.class.unified=='Amp') {
       karyo <- 'Whole.Amp'
     } else if (alt.class.unified=='Del') {
@@ -143,13 +143,13 @@ karyo.classifier <- function(df) {
     }
   } else {
     karyo.detail <- df %>%
-      filter(arm.class!='No.Alt') %>%
+      filter(arm.class!='No.Arm-level.Alt') %>%
       mutate(arm.karyo=paste(arm, arm.class, sep='_')) %>%
       pull(arm.karyo) %>%
       paste(collapse='&')
-    if (alt.class.unified=='Amp_No.Alt') {
+    if (alt.class.unified=='Amp_No.Arm-level.Alt') {
       karyo <- 'Arm.Amp'
-    } else if (alt.class.unified=='Del_No.Alt') {
+    } else if (alt.class.unified=='Del_No.Arm-level.Alt') {
       karyo <- 'Arm.Del'
     } else if (alt.class.unified=='Amp_Del') {
       karyo <- 'Amp.Del'
@@ -183,14 +183,14 @@ sample.amp.del.count <- sample.amp.del %>%
   ungroup() %>%
   mutate(fraction=n/total) %>%
   mutate(Gender=factor(.$Gender, levels=c('Female', 'Male'))) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Alt')))
+  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Arm-level.Alt')))
 
 polyploidy.threshold <- 2.5
 
 chrx.project.order <-  sample.amp.del.count %>%
   filter(chr=='X') %>%
   filter(Gender=='Female') %>%
-  filter(karyo.class=='No.Alt') %>%
+  filter(karyo.class=='No.Arm-level.Alt') %>%
   arrange(fraction) %>%
   pull(project) %>%
   append(c('PRAD', 'TGCT'))
@@ -201,7 +201,7 @@ g <- ggplot(sample.amp.del.count %>%
       mutate(project=factor(.$project, levels=chrx.project.order)),
     aes(x=Gender.n, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity', position='fill') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   facet_wrap(~project, nrow=1, scales='free_x', strip.position='bottom') +
   labs(title='ChrX', y='Fraction of patients', fill='Alteration type') +
@@ -223,7 +223,7 @@ sample.amp.del.chrx <- sample.amp.del %>%
   mutate(ploidy.class.total=paste0(ploidy.class, ' (n=', total, ')')) %>%
   ungroup() %>%
   mutate(fraction=n/total) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Alt'))) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Arm-level.Alt'))) %>%
   mutate(Gender=factor(.$Gender, levels=c('Female', 'Male'))) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid', 'NA'))) %>%
   arrange(Gender, ploidy.class) %>%
@@ -231,7 +231,7 @@ sample.amp.del.chrx <- sample.amp.del %>%
 
 g <- ggplot(sample.amp.del.chrx, aes(x=ploidy.class.total, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1.0), breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   lemon::facet_rep_wrap(~Gender, nrow=1, scales='free_x', repeat.tick.labels=TRUE) +
   labs(title='ChrX', y='Fraction of patients', fill='Alteration type') +
@@ -246,7 +246,7 @@ ggsave(g, file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classificatio
 chry.project.order <-  sample.amp.del.count %>%
   filter(chr=='Y') %>%
   filter(Gender=='Male') %>%
-  filter(karyo.class=='No.Alt') %>%
+  filter(karyo.class=='No.Arm-level.Alt') %>%
   arrange(fraction) %>%
   pull(project)
 
@@ -256,7 +256,7 @@ g <- ggplot(sample.amp.del.count %>%
       mutate(project=factor(.$project, levels=chry.project.order)),
     aes(x=Gender.n, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity', position='fill') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   facet_wrap(~project, nrow=1, scales='free_x', strip.position='bottom') +
   labs(title='ChrY', y='Fraction of patients', fill='Alteration type') +
@@ -278,14 +278,14 @@ sample.amp.del.chry <- sample.amp.del %>%
   mutate(ploidy.class.total=paste0(ploidy.class, ' (n=', total, ')')) %>%
   ungroup() %>%
   mutate(fraction=n/total) %>%
-  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Alt'))) %>%
+  mutate(karyo.class=factor(.$karyo.class, levels=c('Whole.Amp', 'Arm.Amp', 'Amp.Del', 'Arm.Del', 'Whole.Del', 'No.Arm-level.Alt'))) %>%
   mutate(ploidy.class=factor(.$ploidy.class, levels=c('Diploid', 'Polyploid', 'NA'))) %>%
   arrange(ploidy.class) %>%
   mutate(ploidy.class.total=factor(.$ploidy.class.total, levels=unique(.$ploidy.class.total)))
 
 g <- ggplot(sample.amp.del.chry, aes(x=ploidy.class.total, y=fraction)) +
   geom_bar(aes(fill=karyo.class), stat='identity') +
-  scale_fill_manual(values=c('No.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
+  scale_fill_manual(values=c('No.Arm-level.Alt'='gray', 'Whole.Amp'='#D7191C', 'Arm.Amp'='#FDAE61', 'Amp.Del'='#FFFFBF', 'Arm.Del'='#ABD9E9', 'Whole.Del'='#2C7BB6')) +
   scale_y_continuous(limits=c(0, 1.0), breaks=seq(0, 1.0, by=0.2), expand=c(0, 0)) +
   lemon::facet_rep_wrap(~Gender, nrow=1, scales='free_x', repeat.tick.labels=TRUE) +
   labs(title='ChrY', y='Fraction of patients', fill='Alteration type') +
