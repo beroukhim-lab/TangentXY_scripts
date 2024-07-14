@@ -128,18 +128,31 @@ signal.noise <- sn.df %>%
   mutate(fm2=factor(.$fm2, levels=c('5F + 495M', '25F + 475M', '50F + 450M', '150F + 350M', '350F + 150M', '450F + 50M', '475F + 25M', '495F + 5M')))
 
 ## Noise (ChrX)
-stat.test.noise.auto.FMmerged <- signal.noise %>%
+stat.test.noise.auto.FMmerged.female <- signal.noise %>%
+  filter(Gender=='Female') %>%
   filter(method!='-') %>%
   group_by(fm2) %>%
-  rstatix::wilcox_test(noise.x ~ method) %>%
+  rstatix::wilcox_test(noise.x ~ method, paired=TRUE) %>%
+  mutate(Gender=case_when(group1=='Sex-matched Tangent_Female' ~ 'Female', group1=='Sex-matched Tangent_Male' ~ 'Male')) %>%
+  rstatix::add_xy_position(x='fm2')
+
+stat.test.noise.auto.FMmerged.male <- signal.noise %>%
+  filter(Gender=='Male') %>%
+  filter(method!='-') %>%
+  group_by(fm2) %>%
+  rstatix::wilcox_test(noise.x ~ method, paired=TRUE) %>%
+  mutate(Gender=case_when(group1=='Sex-matched Tangent_Female' ~ 'Female', group1=='Sex-matched Tangent_Male' ~ 'Male')) %>%
+  rstatix::add_xy_position(x='fm2')
+
+stat.test.noise.auto.FMmerged <- stat.test.noise.auto.FMmerged.female %>%
+  bind_rows(stat.test.noise.auto.FMmerged.male) %>%
   rstatix::adjust_pvalue(method = "bonferroni") %>%
   rstatix::add_significance() %>%
-  filter(!(group1=='Sex-matched Tangent_Female' & group2=='Sex-matched Tangent_Male')) %>%
-  mutate(Gender=case_when(group1=='Sex-matched Tangent_Female' ~ 'Female', group1=='Sex-matched Tangent_Male' ~ 'Male'))
+  mutate(y.position=case_when(Gender=='Female' ~ y.position+0.03, TRUE ~ y.position))
 
 g <- ggplot(signal.noise, aes(x=fm2, y=noise.x)) +
   geom_boxplot(aes(group=interaction(fm2, method), fill=method)) +
-  # ggpubr::stat_pvalue_manual(stat.test.noise.auto.FMmerged %>% rstatix::add_xy_position(x='fm2'), label='p.adj.signif', col='black', size=5) +
+  ggpubr::stat_pvalue_manual(stat.test.noise.auto.FMmerged, label='p.adj.signif', col='black', size=5) +
   scale_fill_manual(values=list('Sex-matched Tangent_Female'='red', 'Sex-matched Tangent_Male'='royalblue', 'TangentXY'='green')) +
   ylim(0, NA) +
   lemon::facet_rep_wrap(~Gender, nrow=1, repeat.tick.labels=TRUE) +

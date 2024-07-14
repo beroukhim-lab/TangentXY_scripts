@@ -74,12 +74,22 @@ seg.tumor.summary <- seg.tumor2 %>%
   mutate(auto.sex=case_when(Chromosome=='X' ~ 'ChrX', Chromosome=='Y' ~ 'ChrY', TRUE ~ 'Autosomes'))
 saveRDS(seg.tumor.summary, file=here('01_TCGA_seg_arm_level_average/output/01_arm_level_average_calculation', 'seg.tumor.summary.rds'), compress=FALSE)
 
+n.female <- seg.tumor.summary %>%
+  filter(gender=='female') %>%
+  distinct(GDC_Aliquot) %>%
+  nrow()
+
+n.male <- seg.tumor.summary %>%
+  filter(gender=='male') %>%
+  distinct(GDC_Aliquot) %>%
+  nrow()
+
 g <- ggplot(seg.tumor.summary, aes(x=auto.sex, y=seg.arm.mean)) +
   geom_hline(yintercept=0, col='gray', linetype='dashed') +
   geom_hline(yintercept=log2(0.5), col='blue', linetype='dashed') +
   geom_boxplot() +
   scale_y_continuous(breaks=seq(-5, 3, by=1)) +
-  lemon::facet_rep_wrap(~gender, nrow=1, labeller=as_labeller(c('female'='Female', 'male'='Male')), repeat.tick.labels=TRUE) +
+  lemon::facet_rep_wrap(~gender, nrow=1, labeller=as_labeller(c('female'=paste0('Female (n=', n.female, ')'), 'male'=paste0('Male (n=', n.male, ')'))), repeat.tick.labels=TRUE) +
   labs(y=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title=expression(paste('Arm level average ', {log[2]}, '[Relative copy-number]'))) +
   theme_classic(base_size=20) +
   theme(strip.background=element_blank()) +

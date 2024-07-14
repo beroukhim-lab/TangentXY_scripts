@@ -37,11 +37,10 @@ g <- ggplot(signal.x, aes(x=signal, group=SampleID)) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip(xlim=c(NA, 8.3)) +
-  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrX signal (Before transformation)') +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), y='Density', title='ChrX signal (Before transformation)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
-  theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
+  theme(axis.line.y=element_line(linewidth=0.5))
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1a.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1a.pdf'), width=8, height=8)
 
@@ -51,18 +50,30 @@ signal.y <- doc.n[grepl('Y', rownames(doc.n)), ] %>%
   left_join(sif, by='SampleID')
 saveRDS(signal.y, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'signal.y.rds'), compress=FALSE)
 
-g <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
+g1 <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
   ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25), dpi=300, dev='ragg_png') +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip(xlim=c(NA, 8.3)) +
-  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrY signal') +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), y='Density', title='ChrY signal') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
-  theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
-ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c.png'), width=8, height=8)
-ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c.pdf'), width=8, height=8)
+  theme(axis.line.y=element_line(linewidth=0.5))
+ggsave(g1, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c_main.png'), width=8, height=8)
+ggsave(g1, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c_main.pdf'), width=8, height=8)
+
+g2 <- ggplot(signal.y, aes(x=signal, group=SampleID)) +
+  ggrastr::rasterize(geom_density(aes(fill=Gender), alpha=0.25, show.legend=FALSE), dpi=300, dev='ragg_png') +
+  geom_vline(xintercept=0, col='red', linetype='dashed') +
+  geom_vline(xintercept=-1, col='blue', linetype='dashed') +
+  coord_flip(xlim=c(-6, 6), ylim=c(0, 0.8)) +
+  scale_x_continuous(breaks=c(-5, 0, 5)) +
+  scale_y_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8)) +
+  theme_classic(base_size=20) +
+  theme(axis.title.x=element_blank()) +
+  theme(axis.title.y=element_blank())
+ggsave(g2, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c_sub.png'), width=5, height=7)
+ggsave(g2, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1c_sub.pdf'), width=5, height=7)
 
 
 ## Linear transformation on male chrX signals
@@ -121,11 +132,10 @@ g <- ggplot(signal.x.lt, aes(x=signal, group=SampleID)) +
   geom_vline(xintercept=0, col='red', linetype='dashed') +
   geom_vline(xintercept=-1, col='blue', linetype='dashed') +
   coord_flip(xlim=c(NA, 8.3)) +
-  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrX signal (After transformation)') +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), y='Density', title='ChrX signal (After transformation)') +
   theme_classic(base_size=20) +
   theme(axis.line.x=element_line(linewidth=0.5)) +
-  theme(axis.line.y=element_line(linewidth=0.5)) +
-  theme(axis.title.x=element_blank())
+  theme(axis.line.y=element_line(linewidth=0.5))
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.png'), width=8, height=8)
 ggsave(g, file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'FigS1b.pdf'), width=8, height=8)
 
