@@ -3,7 +3,7 @@ library(here)
 
 library(DNAcopy)
 
-sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
+sif <- readRDS(file=here('02_TCGA_data_preparation/output/00_format_sif', 'sif.rds'))
 probes <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'probes.rds')) %>%
   mutate(chr=factor(.$chr, levels=.$chr %>% unique()))
 
@@ -11,7 +11,8 @@ probes <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_o
 tumor.types <- sif$project %>% unique()
 Tn.files <- list.files(here('03_TCGA_TangentXY/output/03_TangentXY/byTumorType'), full.names=TRUE)
 
-for (i in seq_along(tumor.types)) {
+# for (i in seq_along(tumor.types)) {
+for (i in 27:33) {
   tumor.type.i <- tumor.types[i]
   tumor.type.i.Tn.file <- grep(paste0('Tn_', tumor.type.i), Tn.files, value=TRUE)
   print(paste(i, tumor.type.i, tumor.type.i.Tn.file))

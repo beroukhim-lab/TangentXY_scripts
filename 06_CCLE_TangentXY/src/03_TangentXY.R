@@ -35,19 +35,14 @@ saveRDS(Tn.autox.normalized, file=here('06_CCLE_TangentXY/output/03_TangentXY', 
 
 
 ## Tangent on chrY (sex-matched Tangent on male samples)
-doc.n <- readRDS(file=here('05_CCLE_data_preparation/output/03_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'CCLE_WES_hg38_N_QCed_commonCNVremoved.rds'))
-
-male.normals <- sif %>%
-  filter(ModelID %in% colnames(doc.n)) %>%
-  filter(Sex=='Male') %>%
-  pull(ModelID)
+doc.n.male.shifted <- readRDS(file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'CCLE_WES_hg38_N_Shifted.males.rds'))
 
 male.tumors <- sif %>%
   filter(ModelID %in% colnames(doc.t)) %>%
   filter(Sex=='Male') %>%
   pull(ModelID)
 
-N.male <- doc.n[, male.normals] %>%
+N.male <- doc.n.male.shifted %>%
   as.matrix()
 
 T.male <- doc.t[, male.tumors] %>%

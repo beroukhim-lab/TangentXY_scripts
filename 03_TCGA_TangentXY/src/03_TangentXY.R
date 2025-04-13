@@ -1,15 +1,20 @@
 library(tidyverse)
 library(here)
 
-sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
+sif <- readRDS(file=here('02_TCGA_data_preparation/output/00_format_sif', 'sif.rds'))
 
-doc.t <- readRDS(file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'TCGA_WES_hg19_T_QCed_commonCNVremoved.rds'))
+# doc.t <- readRDS(file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'TCGA_WES_hg19_T_QCed_commonCNVremoved.rds'))
+doc.t <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'TCGA_WES_hg19_T_Shifted.rds'))
 
 T <- doc.t %>%
   as.matrix()
 
 ## Tangent on autosome & chrX
 T.autox <- T[!grepl('Y', rownames(T)),]
+
+male.tumors <- sif %>%
+  filter(SampleID %in% colnames(doc.t) & Gender=='Male') %>%
+  pull(SampleID)
 
 dimensions <- c(10, 30, 50, 100, 200, 500, 5000, 10441)
 for (i in 1:length(dimensions)) {
@@ -34,22 +39,17 @@ for (i in 1:length(dimensions)) {
 
   Tn.autox.normalized <- t(t(Tn.autox)- Tn.auto.medians)
 
+  ## Adjust male chrX
+  Tn.autox.normalized[grepl('X', rownames(Tn.autox.normalized)), male.tumors] <- Tn.autox.normalized[grepl('X', rownames(Tn.autox.normalized)), male.tumors] - 1
+
   saveRDS(Tn.autox.normalized, file=here('03_TCGA_TangentXY/output/03_TangentXY', paste0('Tn_autox_svd_', dim.i, 'dimensions.rds')), compress=FALSE)
 }
 
 
 ## Tangent on chrY (sex-matched Tangent on male samples)
-doc.n <- readRDS(file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'TCGA_WES_hg19_N_QCed_commonCNVremoved.rds'))
+doc.n.male.shifted <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'TCGA_WES_hg19_N_Shifted_males.rds'))
 
-male.normals <- sif %>%
-  filter(SampleID %in% colnames(doc.n) & Gender=='Male') %>%
-  pull(SampleID)
-
-male.tumors <- sif %>%
-  filter(SampleID %in% colnames(doc.t) & Gender=='Male') %>%
-  pull(SampleID)
-
-N.male <- doc.n[, male.normals] %>%
+N.male <- doc.n.male.shifted %>%
   as.matrix()
 
 T.male <- doc.t[, male.tumors] %>%
@@ -72,6 +72,9 @@ Tn.male.medians <- Tn.male[!grepl('X|Y', rownames(Tn.male)),] %>%
 
 Tn.male.normalized <- t(t(Tn.male)- Tn.male.medians)
 
+## Adjust chrY to be relative to ploidy for each sample
+Tn.male.normalized[grepl('Y', rownames(Tn.male.normalized)), ] <- Tn.male.normalized[grepl('Y', rownames(Tn.male.normalized)), ] - 1
+
 saveRDS(Tn.male.normalized, file=here('03_TCGA_TangentXY/output/03_TangentXY', 'Tn_sexMatchedTangentOnMale.rds'), compress=FALSE)
 
 
@@ -82,11 +85,8 @@ Tn.autox.normalized <- readRDS(file=here('03_TCGA_TangentXY/output/03_TangentXY'
 
 Tn.male.y <- Tn.male.normalized[grepl('Y', rownames(Tn.male.normalized)),]
 
-## Adjust chrY to be relative to ploidy for each sample
-Tn.male.y.adj <- Tn.male.y - 1
-
 Tn.combined <- as.data.frame(Tn.autox.normalized) %>%
-  bind_rows(as.data.frame(Tn.male.y.adj)) %>%
+  bind_rows(as.data.frame(Tn.male.y)) %>%
   replace(is.na(.), -10) %>%
   as.matrix()
 

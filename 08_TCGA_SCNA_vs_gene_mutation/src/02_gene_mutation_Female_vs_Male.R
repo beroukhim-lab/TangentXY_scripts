@@ -1,7 +1,7 @@
 library(tidyverse)
 library(here)
 
-sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
+sif <- readRDS(file=here('02_TCGA_data_preparation/output/00_format_sif', 'sif.rds'))
 
 sample.amp.del <- readRDS(file=here('07_SCNAs_in_chrX_and_chrY/output/01_TCGA_SCNA_classification', 'sample.amp.del.rds'))
 
@@ -21,6 +21,84 @@ mut.data <- mut@data %>%
                         type.code=='06' ~ 'TM')) %>%
   left_join(sif, by=c('TCGA.ID', 'type'))
 saveRDS(mut.data, file=here('08_TCGA_SCNA_vs_gene_mutation/output/01_SCNA_vs_gene_mutation', 'mut.data.rds'), compress=FALSE)
+
+
+tumor.types <- sif$project %>% unique()
+genes <- mut.data$Hugo_Symbol %>% unique()
+
+n_perms <- 10000
+
+mut_data_flt <- mut.data %>%
+  filter(!is.na(Gender))
+
+common_samples <- intersect(unique(mut_data_flt$SampleID), unique(sif$SampleID))
+
+perm_test <- function(gene) {
+  i <- which(genes==gene)
+  print(paste(i, gene))
+
+  mut_data_i <- mut_data_flt %>%
+    filter(Hugo_Symbol==gene) %>%
+    distinct(SampleID, .keep_all=TRUE)
+  
+  mut_data <- sif %>%
+    filter(SampleID %in% common_samples) %>%
+    mutate(alt=case_when(SampleID %in% mut_data_i$SampleID ~ 'mut', TRUE ~ 'wt')) %>%
+    select(Gender, alt)
+  
+  mut_perm <- mut_data %>%
+    infer::rep_sample_n(size=nrow(mut_data), replace=FALSE, reps=n_perms) %>%
+    mutate(Gender=sample(Gender, replace=FALSE, size=nrow(mut_data)))
+
+  mut_perm_counts <- mut_perm %>%
+    group_by(Gender, alt, replicate, .drop=FALSE) %>%
+    summarize(count=n())
+
+  mut_perm_summaries <-  mut_perm_counts %>%  
+    group_by(Gender, replicate) %>% 
+    mutate(n = sum(count)) %>% 
+    ungroup() %>%
+    filter(alt == 'mut') %>%
+    group_by(replicate) %>%
+    mutate(risk = count / n,
+          odds = risk / (1- risk),
+          relative_risk = risk / (sum(risk) - risk),
+          odds_ratio = odds / (sum(odds) - odds)) %>%
+    filter(Gender == 'Male') %>% 
+    ungroup()
+  
+  mut_data_table <- mut_data %>% table()
+  actual_odds_ratio <- ((mut_data_table[2, 1] / mut_data_table[2, 2]) / (mut_data_table[1, 1] / mut_data_table[1, 2]))
+
+  observed_both_tails <- c(actual_odds_ratio, 1 / actual_odds_ratio)
+  pval <- mut_perm_summaries %>%
+    mutate(as_or_more_extreme=odds_ratio <= min(observed_both_tails) |
+                                            max(observed_both_tails)) %>%
+    summarise(p_val=mean(as_or_more_extreme)) %>%
+    pull()
+  
+  df <- data.frame(gene=gene, odds_ratio=actual_odds_ratio, pval=pval, mut_num=mut_data %>% filter(alt=='mut') %>% nrow())
+
+  return(df)
+}
+
+
+gene_list <- c('ATRX', 'DDX3X', 'CRLF2', 'KDM6A', 'CXorf22', 'KDM5C', 'IL9R', 'SHOX')
+perm_test_list <- parallel::mclapply(gene_list, perm_test, mc.cores=parallel::detectCores() - 2)
+perm_test_df <- perm_test_list %>%
+  bind_rows()
+
+
+g <- ggplot(perm_test_df, aes(x=log2(odds_ratio), y=-log10(pval))) +
+  geom_point(aes(size=))
+
+for (i in seq_along(tumor.types)) {
+  tumor.type.i <- tumor.types[i]
+  sif.i <- sif %>%
+    filter(project==tumor.type.i)
+
+}
+
 
 chrx.karyo <- sample.amp.del %>%
   filter(chr=='X') %>%

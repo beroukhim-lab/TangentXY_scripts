@@ -36,4 +36,4 @@ exon.positions.df.distinct <- exon.positions.df %>%
 snp.annot.df <- snp.probes %>%
   left_join(exon.positions.df.distinct, by=c('CHROM', 'POS')) %>%
   mutate(region=case_when(is.na(region) ~ 'intron', TRUE ~ region))
-saveRDS(snp.annot.df, file=here('11_chrX_allele_specific_expression/output/03_TCGA_annotate_SNPs', 'snp.annot.df.rds'), compress=FALSE)s
+saveRDS(snp.annot.df, file=here('11_chrX_allele_specific_expression/output/03_TCGA_annotate_SNPs', 'snp.annot.df.rds'), compress=FALSE)

@@ -22,7 +22,7 @@ probes <- doc.n %>%
                         start > centromerEnd - 1500000 ~ 'q'))
 saveRDS(probes, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'probes.rds'), compress=FALSE)
 
-## Check the signal distribution of chrX and chrY in normal samples (Before Z-score conversion)
+## Check the signal distribution of chrX and chrY in normal samples (Before translaformation)
 signal.x <- doc.n[grepl('chrX', rownames(doc.n)), ] %>%
   rownames_to_column('locus') %>%
   left_join(probes, by='locus') %>%
@@ -40,6 +40,25 @@ g <- ggplot(signal.x, aes(x=signal, group=ModelID)) +
   theme(axis.line.y=element_line(linewidth=0.5)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalSamples_ChrX_signalDistribution.png'), dpi=100, width=8, height=8)
+
+signal.y <- doc.n[grepl('chrY', rownames(doc.n)), ] %>%
+  rownames_to_column('locus') %>%
+  left_join(probes, by='locus') %>%
+  pivot_longer(names_to='ModelID', values_to='signal', cols=colnames(doc.n)) %>%
+  left_join(sif %>% select(ModelID, CellLineName, StrippedCellLineName, Sex, OncotreePrimaryDisease, OncotreeLineage), by='ModelID')
+
+g <- ggplot(signal.y %>% filter(Sex=='Male'), aes(x=signal, group=ModelID)) +
+  geom_density(aes(fill=Sex), alpha=0.25) +
+  geom_vline(xintercept=0, col='red', linetype='dashed') +
+  geom_vline(xintercept=-1, col='blue', linetype='dashed') +
+  scale_fill_manual(values=c('Male'='#00BFC4')) +
+  coord_flip() +
+  labs(title='ChrY signal (Before shift)') +
+  theme_classic(base_size=20) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.title.x=element_blank())
+ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalSamples_ChrY_signalDistribution.png'), dpi=100, width=8, height=8)
 
 
 ## Linear transformation on male chrX signals
@@ -64,21 +83,11 @@ male.x.mean <- doc.n[grepl('chrX', rownames(doc.n)),] %>%
   as.matrix() %>%
   mean()
 
-female.x.sd <- doc.n[grepl('chrX', rownames(doc.n)),] %>%
-  select(female.samples) %>%
-  as.matrix() %>%
-  sd()
-
-male.x.sd <- doc.n[grepl('chrX', rownames(doc.n)),] %>%
-  select(male.samples) %>%
-  as.matrix() %>%
-  sd()
-
 doc.n.xy.transformed <- doc.n[grepl('chrX|chrY', rownames(doc.n)), ] %>%
   rownames_to_column('locus') %>%
   separate(col=locus, into=c('Chr', 'pos'), sep=':') %>%
   pivot_longer(names_to='ModelID', values_to='signal', cols=-c('Chr', 'pos')) %>%
-  mutate(signal=case_when(ModelID %in% male.samples & Chr=='chrX' ~ ((signal - male.x.mean)/male.x.sd) * female.x.sd + female.x.mean,
+  mutate(signal=case_when(ModelID %in% male.samples & Chr=='chrX' ~ signal - male.x.mean + female.x.mean,
                           TRUE ~ signal)) %>%
   pivot_wider(names_from='ModelID', values_from='signal') %>%
   unite(col=locus, c('Chr', 'pos'), sep=':') %>%
@@ -105,3 +114,51 @@ g <- ggplot(signal.x.lt, aes(x=signal, group=ModelID)) +
   theme(axis.title.x=element_blank())
 ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalSamples_ChrX_transformedSignalDistribution.png'), dpi=100, width=8, height=8)
 
+
+## Linear transformation on male chrY signals
+male.y.mean <- doc.n[grepl('chrY', rownames(doc.n)),] %>%
+  select(male.samples) %>%
+  as.matrix() %>%
+  mean()
+
+male.y.mean.mode <- doc.n[grepl('chrY', rownames(doc.n)),] %>%
+  select(male.samples) %>%
+  as.matrix() %>%
+  apply(., 2, mean) %>%
+  density() %>%
+  {.$x[which.max(.$y)]}
+
+doc.n.male.y.shifted <- doc.n[grepl('chrY', rownames(doc.n)), male.samples] %>%
+  rownames_to_column('locus') %>%
+  separate(col=locus, into=c('Chr', 'pos'), sep=':') %>%
+  pivot_longer(names_to='ModelID', values_to='signal', cols=-c('Chr', 'pos')) %>%
+  group_by(ModelID) %>%
+  mutate(sample_mean=mean(signal), sample_sd=sd(signal)) %>%
+  ungroup() %>%
+  mutate(zs_signal=(signal - sample_mean + male.y.mean.mode)) %>%
+  select(Chr, pos, ModelID, zs_signal) %>%
+  pivot_wider(names_from='ModelID', values_from='zs_signal') %>%
+  unite(col=locus, c('Chr', 'pos'), sep=':') %>%
+  column_to_rownames('locus')
+
+doc.n.male.shifted <- doc.n[!grepl('chrY', rownames(doc.n)), male.samples] %>%
+  bind_rows(doc.n.male.y.shifted)
+saveRDS(doc.n.male.shifted, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'CCLE_WES_hg38_N_Shifted.males.rds'), compress=FALSE)
+
+## Check the signal distribution of chrY after linear transformation
+signal.y.shifted <- doc.n.male.y.shifted %>%
+  pivot_longer(names_to='ModelID', values_to='signal', cols=everything()) %>%
+  left_join(sif, by='ModelID')
+
+g <- ggplot(signal.y.shifted, aes(x=signal, group=ModelID)) +
+  ggrastr::rasterize(geom_density(aes(fill=Sex), alpha=0.25), dpi=300, dev='ragg_png') +
+  geom_vline(xintercept=0, col='red', linetype='dashed') +
+  geom_vline(xintercept=-1, col='blue', linetype='dashed') +
+  scale_fill_manual(values=c('Male'='#00BFC4')) +
+  coord_flip() +
+  labs(x=expression(paste({log[2]}, '[Relative copy-number]', sep='')), title='ChrY signal (After shift)') +
+  theme_classic(base_size=20) +
+  theme(axis.line.x=element_line(linewidth=0.5)) +
+  theme(axis.line.y=element_line(linewidth=0.5)) +
+  theme(axis.title.x=element_blank())
+ggsave(g, file=here('06_CCLE_TangentXY/output/01_LinearTransformation', 'NormalSamples_ChrY_shiftedSignalDistribution.png'), width=8, height=8)

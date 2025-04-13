@@ -15,7 +15,7 @@ library(here)
 
 ## Options
 floor.val.frac <- 0.001 # Threshold value specified as double within [0,1].
-#       CN values will be floored at floor.val.frac x (data mean)
+# CN values will be floored at floor.val.frac x (data mean)
 
 dat.outlier.removed <- readRDS(file=here('02_TCGA_data_preparation/output/02_3_DOC_Preprocessing_removeOutliers', 'dat.outlier.removed.rds'))
 

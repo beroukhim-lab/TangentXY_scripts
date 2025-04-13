@@ -1,9 +1,9 @@
 library(tidyverse)
 library(here)
 
-doc.n.transformed <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'TCGA_WES_hg19_N_Transformed.rds'))
+doc.n.shifted <- readRDS(file=here('03_TCGA_TangentXY/output/01_Linear_transformation_on_normals', 'TCGA_WES_hg19_N_Shifted.rds'))
 
-N.autox <- doc.n.transformed[!grepl('Y', rownames(doc.n.transformed)),] %>%
+N.autox <- doc.n.shifted[!grepl('Y', rownames(doc.n.shifted)),] %>%
   as.matrix()
 
 ## SVD

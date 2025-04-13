@@ -1,15 +1,23 @@
 library(tidyverse)
 library(here)
 
-sif <- read.delim(file=here('02_TCGA_data_preparation/data', 'sif.txt'))
+sif <- readRDS(file=here('02_TCGA_data_preparation/output/00_format_sif', 'sif.rds'))
+
+gender.known.samples <- sif %>%
+  filter(!is.na(Gender)) %>%
+  pull(SampleID)
 
 ## Check the distribution of ChrX median signal
-doc.t <- readRDS(file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'TCGA_WES_hg19_T_QCed_commonCNVremoved.rds'))
+doc.t <- readRDS(file=here('02_TCGA_data_preparation/output/02_6_DOC_Preprocessing_removeCommonGermlineCNVs', 'TCGA_WES_hg19_T_QCed_commonCNVremoved.rds')) %>%
+  select(any_of(gender.known.samples))
 
-T.chrX.signal <- doc.t %>%
+T.chrX.signal.median <- doc.t %>%
   rownames_to_column('locus') %>%
   filter(grepl('^X', locus)) %>%
   pivot_longer(names_to='SampleID', values_to='signal', cols=-'locus') %>%
+  left_join(sif, by='SampleID') %>%
+  group_by(SampleID, Gender) %>%
+  summarize(median.signal=median(signal)) %>%
   mutate(dimension='Pre-norm')
 
 dimensions <- c(10, 30, 50, 100, 200, 500, 5000, 10441)
@@ -20,28 +28,31 @@ for (i in seq_along(dimensions)) {
   Tn.i <- readRDS(file=here('03_TCGA_TangentXY/output/03_TangentXY', paste0('Tn_autox_svd_', dim.i, 'dimensions.rds'))) %>%
     as.data.frame()
 
-  Tn.chrX.signal.i <- Tn.i %>%
+  Tn.chrX.signal.median.i <- Tn.i %>%
     rownames_to_column('locus') %>%
     filter(grepl('^X', locus)) %>%
     pivot_longer(names_to='SampleID', values_to='signal', cols=-'locus') %>%
+    left_join(sif, by='SampleID') %>%
+    group_by(SampleID, Gender) %>%
+    summarize(median.signal=median(signal)) %>%
     mutate(dimension=dim.i)
 
   if (i==1) {
-    Tn.chrX.signal <- Tn.chrX.signal.i
+    Tn.chrX.signal.median <- Tn.chrX.signal.median.i
   } else {
-    Tn.chrX.signal <- bind_rows(Tn.chrX.signal, Tn.chrX.signal.i)
+    Tn.chrX.signal.median <- bind_rows(Tn.chrX.signal.median, Tn.chrX.signal.median.i)
   }
+
+  rm(Tn.i)
+  rm(Tn.chrX.signal.median.i)
+  gc()
+  gc()
 }
 
-chrX.signal <- T.chrX.signal %>%
-  bind_rows(Tn.chrX.signal %>% mutate(dimension=as.character(dimension))) %>%
-  mutate(dimension=factor(.$dimension, levels=.$dimension %>% unique())) %>%
-  left_join(sif, by='SampleID')
-saveRDS(chrX.signal, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'chrX.signal.rds'), compress=FALSE)
-
-chrX.signal.median <- chrX.signal %>%
-  group_by(SampleID, Gender, dimension) %>%
-  summarize(median.signal=median(signal))
+chrX.signal.median <- T.chrX.signal.median %>%
+  bind_rows(Tn.chrX.signal.median %>% mutate(dimension=as.character(dimension))) %>%
+  ungroup() %>%
+  mutate(dimension=factor(.$dimension, levels=.$dimension %>% unique()))
 saveRDS(chrX.signal.median, file=here('03_TCGA_TangentXY/output/04_normalized_chrX_signal', 'chrX.signal.median.rds'), compress=FALSE)
 
 dimensions.labels <- c('Pre-norm'='Pre-norm', '10'='k=10', '30'='k=30', '50'='k=50', '100'='k=100', '200'='k=200', '500'='k=500', '5000'='k=5000', '10441'='k=10441\n(No SVD on N)')

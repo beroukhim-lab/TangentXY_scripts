@@ -22,7 +22,7 @@ calc.signal.noise <- function(list) {
     group_by(chr, arm) %>%
     summarize(arm.median=median(signal)) %>%
     ungroup() %>%
-    summarize(signal=sds(arm.median)) %>%
+    summarize(signal=sd(arm.median)) %>%
     pull(signal)
 
   noise <- data %>% 
